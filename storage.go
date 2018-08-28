@@ -110,7 +110,7 @@ func CreateEntityIdent(name string) (int){
     // now we unlock the mutex
     // and return the new id
     EntityIdentMutex.Unlock()
-    return
+    return newID
 }
 
 //func DeleteEntityIdent() {
@@ -142,11 +142,11 @@ func CreateEntity(entity Entity) (int){
     return newId
 }
 
-func GetEntityByPath(ident int, Type int, id int) (Entity){
+func GetEntityByPath(ident int, Type int, id int) (int, Entity){
     if id, ok := EntityRIdents[name]; ok {
         // dont forget to unlock
         EntityIdentMutex.Unlock()
-        return id
+        return 
     }
 }
 
