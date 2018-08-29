@@ -35,8 +35,8 @@ var EntityStorageMutex = make(map[int]map[int]*sync.Mutex )
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - -
 // maps to translate Idents to their INT and reverse
-var EntityIdents          = make(map[int]string)
-var EntityRIdents         = make(map[string]int)
+var EntityIdents       = make(map[int]string)
+var EntityRIdents      = make(map[string]int)
 // and a fitting max ID
 var EntityIdentIDMax  int = 0
 
@@ -128,13 +128,15 @@ func CreateEntityIdent(name string) (int){
 //}
 
 func CreateEntity(entity Entity) (int){
+    EntityStorageMutex[entity.Ident][entity.Type].Lock()
     // first we lock fitting
     // entity storage mutex
     if _, ok := EntityIdents[entity.Ident]; !ok {
+        EntityStorageMutex[entity.Ident][entity.Type].Unlock()
         return -1
     }
     // ok it exists, we lock the fitting mutex
-    EntityStorageMutex[entity.Ident][entity.Type].Lock()
+
     // upcount our ID Max and copy it
     // into another variable so we can be sure
     // between unlock of the ressource and return
