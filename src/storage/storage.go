@@ -7,6 +7,7 @@ import (
     //"math/rand"
     "sync"
     //"time"
+    "errors"
 ) 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -167,14 +168,16 @@ func CreateEntity(entity Entity) (int){
     return newID
 }
 
-func GetEntityByPath(ident int, Type int, id int) (Entity){
+func GetEntityByPath(ident int, Type int, id int) (Entity, error){
+    //state := 0
     if entity, ok := EntityStorage[ident][Type][id]; ok {
         // dont forget to unlock
-        EntityIdentMutex.Unlock()
-        return entity
+        //state = 1
+        return entity, nil
     }
-    var entity = Entity{}
-    return entity
+    //entity := Entity{}
+    //state   = -1
+    return Entity{}, errors.New("test error");
 }
 
 func GetEntityByIdentAndType() {
