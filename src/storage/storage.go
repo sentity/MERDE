@@ -128,15 +128,26 @@ func CreateEntityIdent(name string) (int){
 //}
 
 func CreateEntity(entity Entity) (int){
-    EntityStorageMutex[entity.Ident][entity.Type].Lock()
-    // first we lock fitting
-    // entity storage mutex
+    // first we lock the entity ident mutex
+    // to make sure while we check for the
+    // existence it doesnt get deletet, this
+    // may sound like a very rare upcoming case,
+    //but better be safe than sorry
+    EntityIdentMutex.Lock()
+    // now 
     if _, ok := EntityIdents[entity.Ident]; !ok {
-        EntityStorageMutex[entity.Ident][entity.Type].Unlock()
+        // the ident doest exist, lets unlock
+        // the ident mutex and return -1 for fail0r
+        EntityIdentMutex.Unlock()
         return -1
     }
-    // ok it exists, we lock the fitting mutex
-
+    // the ident seems to exist, now lets lock the
+    // storage mutex before Unlocking the Entity
+    // ident mutex to prevent the ident beeing
+    // deleted before we start locking (small
+    // timing still possible )
+    EntityStorageMutex[entity.Ident][entity.Type].Lock()
+    EntityIdentMutex.Unlock()
     // upcount our ID Max and copy it
     // into another variable so we can be sure
     // between unlock of the ressource and return
