@@ -16,21 +16,31 @@ func main() {
     var i =  storage.CreateEntityIdent("test");
     fmt.Println("Created new ident , retrieved id: ",i)
     var entity storage.Entity
-    entity.Type  = 1
-    entity.Ident = storage.EntityRIdents["test"]
+    entity.Type    = 1
+    entity.Ident   = storage.EntityRIdents["test"]
     entity.Context = "thats it"
+    entity.Value   = "what a wonderfull world"
     tmp := 1
-    fmt.Println("Starting massinsert:")
+    max := 10000000
+    fmt.Println("Defined value for mass tests: ",max)
+    fmt.Println("Starting mass testing:")
     start := time.Now()
-    for tmp < 10000000 {
+    for tmp < max + 1 {
          storage.CreateEntity(entity)
-        tmp++
+         tmp++
     }
     elapsed := time.Since(start)
     fmt.Println("Insert done in:",elapsed)
-    
-    
-    
+    start2  := time.Now()
+    tmp2    := 1
+    for tmp2 < max {
+        // entity, _ := 
+        storage.GetEntityByPath(1,1,tmp2)
+        //fmt.Printf("%#v", entity)
+        tmp2++
+    }
+    elapsed2 := time.Since(start2)
+    fmt.Println("Read done in:",elapsed2)
     
     
 }

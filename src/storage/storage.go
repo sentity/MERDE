@@ -8,6 +8,7 @@ import (
     "sync"
     //"time"
     "errors"
+    "strings"
 ) 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -15,8 +16,9 @@ import (
 type Entity struct {
     ID         int
     Type       int
-    Context    string
     Ident      int
+    Context    string
+    Value      string
     Properties map[string]string
 }
 
@@ -59,22 +61,36 @@ type Relation struct {
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - -
-// relation storage map         [Type] [Source]   [Target]   [ID]
-var RelationStorage  = make(map[int]map[string]map[string]map[int]Relation)
+// s prefix = source
+// t prefix = target
+// relation storage map             [type]  [sIdent][sId]   [tIdent][tId]
+var RelationStorage       = make(map[int]map[int]map[int]map[int]map[int]Relation)
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - -
-// relation reverse storage map
-// (for faster queries)        [Type]  [Target]   [source]   [ID] [path]
-var RelationRStorage = make(map[int]map[string]map[string]map[int]string)
+// and relation reverse storage map
+// (for faster queries)             [type] [tIdent] [Tid]   [sIdent][sId]
+var RelationRStorage      = make(map[int]map[int]map[int]map[int]map[int]string)
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - -
-// relation index max id       [Type]  [Source]   [Target]   [ID]
-var RelationIDMax    = make(map[int]map[string]map[string]map[int]int)
+// relation index max id            [type]  [sIdent][sId] 
+var RelationStorageMutex  = make(map[int]map[int]map[int]*sync.Mutex)
+
+
+
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - -
 // + + + + + + FUNCTIONS + + + + + + 
 // - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - -
+// init/construct function for storage package
+func init() {
+    // first we gonne create the mutex
+    // maps inside the RelationStorage
+    //RelationStorageMutex[1]   = make(map[string]*sync.Mutex)
+    //RelationStorageMutex[2]   = make(map[string]*sync.Mutex)
+}
+
+
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Create an entity ident
@@ -112,7 +128,7 @@ func CreateEntityIdent(name string) (int){
     EntityStorage[newID][1]       = tmpMap3
     EntityStorage[newID][2]       = tmpMap3
 //    map[int]map[int]map[int]Entity
-    // finally set the maxID for the new
+    // set the maxID for the new
     // ident types
     var tmpMap4                = make(map[int]int)
     EntityIDMax[newID]         = tmpMap4
@@ -165,22 +181,34 @@ func CreateEntity(entity Entity) (int){
     // since we now stored the entity we can unlock
     // the storage ressource and return the ID
     EntityStorageMutex[entity.Ident][entity.Type].Unlock()
+    // create the mutex for our ressource on
+    // relation. we have to create the sub maps too
+    // golang things....
+    var tmpMap1             = make(map[int]map[int]*sync.Mutex)
+    RelationStorageMutex[1] = tmp1
+    RelationStorageMutex[2] = tmp1
+    var tmpMap2             = make(map[int]*sync.Mutex)
+    //RelationStorageMutex[1]
+    // ###jba
+    RelationStorageMutex[2][entity.Ident][newId] = &sync.Mutex{}
+    // finally we return the new id
     return newID
 }
 
 func GetEntityByPath(ident int, Type int, id int) (Entity, error){
-    //state := 0
+    // lets check if entity witrh the given path exists
     if entity, ok := EntityStorage[ident][Type][id]; ok {
-        // dont forget to unlock
-        //state = 1
+        // if yes we return the entity
+        // and nil for error
         return entity, nil
     }
-    //entity := Entity{}
-    //state   = -1
-    return Entity{}, errors.New("test error");
+    // the path seems to result empty , so
+    // we throw an error 
+    return Entity{}, errors.New("Entity on given path does not exist.");
 }
 
 func GetEntityByIdentAndType() {
+    
     
 }
 
