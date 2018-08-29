@@ -116,7 +116,7 @@ func CreateEntityIdent(name string) (int){
     var tmpMap4                = make(map[int]int)
     EntityIDMax[newID]         = tmpMap4
     EntityIDMax[newID][1]      = 0
-    EntityIDMax[newID][1]      = 0
+    EntityIDMax[newID][2]      = 0
     // now we unlock the mutex
     // and return the new id
     EntityIdentMutex.Unlock()
