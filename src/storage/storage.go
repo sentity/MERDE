@@ -5,11 +5,11 @@ import (
 	//"fmt"
 	//"os"
     //"math/rand"
-    "sync"
     //"time"
-    "errors"
     //"strconv"
     //"strings"
+    "errors"
+    "sync"
 ) 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -162,7 +162,7 @@ func CreateEntity(entity Entity) (int, error){
     // between unlock of the ressource and return
     // it doesnt get upcounted
     // lets upcount the entity id max fitting to
-    //         [ident]  and  [type]
+    //         [ident] 
     EntityIDMax[entity.Ident]++
     var newID = EntityIDMax[entity.Ident]
     // and tell the entity its own id
@@ -239,14 +239,10 @@ func CreateRelation(srcIdent int, srcID int, targetIdent int, targetID int, rela
     }
     // now we store the relation 
     RelationStorage[srcIdent][srcID][targetIdent][targetID] = relation
-    // and a pointer in the reverse index
-    //RelationRStorage[targetIdent][targetID][srcIdent][srcID] = &RelationStorage[srcIdent][srcID][targetIdent][targetID]
-    // since the solution above doesnt work atm we do the following workarround temporary
-    //a := strconv.Itoa(srcIdent)
-    //b := strconv.Itoa(srcID)
-    //c := strconv.Itoa(targetIdent)
-    //d := strconv.Itoa(targetID)
-    //RelationRStorage[targetIdent][targetID][srcIdent][srcID] = a + ":" + b + ":" + c + ":" + d
+    // and an entry into the reverse index, its existence
+    // allows us to use the coords in the normal index to revtrieve
+    // the Relation. We dont create a pointer because golang doesnt
+    // allow pointer on submaps in nested maps
     RelationRStorage[targetIdent][targetID][srcIdent][srcID] = true
     // we are done now we can unlock the entity idents
     EntityStorageMutex[srcIdent].Unlock()
