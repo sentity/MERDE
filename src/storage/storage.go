@@ -8,14 +8,13 @@ import (
     "sync"
     //"time"
     "errors"
-    "strings"
+    //"strings"
 ) 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - -
 // entity struct 
 type Entity struct {
     ID         int
-    Type       int
     Ident      int
     Context    string
     Value      string
@@ -23,18 +22,18 @@ type Entity struct {
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - -
-// entity storage map            [Ident] [Type]  [ID]
-var EntityStorage      = make(map[int]map[int]map[int]Entity)
+// entity storage map            [Ident] [ID]
+var EntityStorage      = make(map[int]map[int]Entity)
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - -
-// entity storage id max         [Ident] [Type]  
-var EntityIDMax        = make(map[int]map[int]int)
+// entity storage id max         [Ident]  
+var EntityIDMax        = make(map[int]int)
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - -
 // entity storage mutex is a per ident mutex so write
 // operations only block on ident + type
-//                               [ident] [type]
-var EntityStorageMutex = make(map[int]map[int]*sync.Mutex )
+//                               [ident] 
+var EntityStorageMutex = make(map[int]*sync.Mutex )
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - -
 // maps to translate Idents to their INT and reverse
@@ -53,7 +52,6 @@ var EntityIdentMutex   = &sync.Mutex{}
 // relation struct 
 type Relation struct {
     ID         int
-    Type       int
     Context    string
     Source     string
     Target     string
@@ -63,15 +61,15 @@ type Relation struct {
 // - - - - - - - - - - - - - - - - - - - - - - - - - -
 // s prefix = source
 // t prefix = target
-// relation storage map             [type]  [sIdent][sId]   [tIdent][tId]
-var RelationStorage       = make(map[int]map[int]map[int]map[int]map[int]Relation)
+// relation storage map             [sIdent][sId]   [tIdent][tId]
+var RelationStorage       = make(map[int]map[int]map[int]map[int]Relation)
 
 // and relation reverse storage map
-// (for faster queries)             [type] [tIdent] [Tid]   [sIdent][sId]
-var RelationRStorage      = make(map[int]map[int]map[int]map[int]map[int]string)
+// (for faster queries)              [tIdent][Tid]   [sIdent][sId]
+var RelationRStorage      = make(map[int]map[int]map[int]map[int]string)
 
-// relation index max id            [type]  [sIdent][sId] 
-var RelationStorageMutex  = make(map[int]map[int]map[int]*sync.Mutex)
+// relation index max id            [sIdent][sId] 
+var RelationStorageMutex  = make(map[int]map[int]*sync.Mutex)
 
 
 
@@ -110,30 +108,21 @@ func CreateEntityIdent(name string) (int){
     // between unlock of the ressource and return
     // it doesnt get upcounted
     EntityIdentIDMax++
-    var newID             = EntityIdentIDMax
+    var newID                 = EntityIdentIDMax
     // finally create the new ident in our
     // EntityIdents index and reverse index
-    EntityIdents[newID]   = name
-    EntityRIdents[name]   = newID
+    EntityIdents[newID]       = name
+    EntityRIdents[name]       = newID
     // and create mutex for EntityStorage ident+type
-    var tmpMap                    = make(map[int]*sync.Mutex)
-    EntityStorageMutex[newID]     = tmpMap
-    EntityStorageMutex[newID][1]  = &sync.Mutex{}
-    EntityStorageMutex[newID][2]  = &sync.Mutex{}
+    EntityStorageMutex[newID] = &sync.Mutex{}
     // now we prepare the submaps in the entity
     // storage itseöf....
-    var tmpMap2                   = make(map[int]map[int]Entity)
-    EntityStorage[newID]          = tmpMap2
-    var tmpMap3                   = make(map[int]Entity)
-    EntityStorage[newID][1]       = tmpMap3
-    EntityStorage[newID][2]       = tmpMap3
-//    map[int]map[int]map[int]Entity
+    EntityStorage[newID]      = make(map[int]Entity)
     // set the maxID for the new
-    // ident types
-    var tmpMap4                = make(map[int]int)
-    EntityIDMax[newID]         = tmpMap4
-    EntityIDMax[newID][1]      = 0
-    EntityIDMax[newID][2]      = 0
+    // ident type
+    EntityIDMax[newID]        = 0
+    // and create the basic submaps for
+    // the relation storage
     // now we unlock the mutex
     // and return the new id
     EntityIdentMutex.Unlock()
@@ -144,7 +133,7 @@ func CreateEntityIdent(name string) (int){
 //    
 //}
 
-func CreateEntity(entity Entity) (int){
+func CreateEntity(entity Entity) (int, error){
     // first we lock the entity ident mutex
     // to make sure while we check for the
     // existence it doesnt get deletet, this
@@ -156,14 +145,14 @@ func CreateEntity(entity Entity) (int){
         // the ident doest exist, lets unlock
         // the ident mutex and return -1 for fail0r
         EntityIdentMutex.Unlock()
-        return -1
+        return -1, errors.New("Entity ident not existing");
     }
     // the ident seems to exist, now lets lock the
     // storage mutex before Unlocking the Entity
     // ident mutex to prevent the ident beeing
     // deleted before we start locking (small
     // timing still possible )
-    EntityStorageMutex[entity.Ident][entity.Type].Lock()
+    EntityStorageMutex[entity.Ident].Lock()
     EntityIdentMutex.Unlock()
     // upcount our ID Max and copy it
     // into another variable so we can be sure
@@ -171,33 +160,36 @@ func CreateEntity(entity Entity) (int){
     // it doesnt get upcounted
     // lets upcount the entity id max fitting to
     //         [ident]  and  [type]
-    EntityIDMax[entity.Ident][entity.Type]++
-    var newID = EntityIDMax[entity.Ident][entity.Type]
+    EntityIDMax[entity.Ident]++
+    var newID = EntityIDMax[entity.Ident]
     // and tell the entity its own id
     entity.ID = newID
     // now we store the entity element
     // in the EntityStorage
-    EntityStorage[entity.Ident][entity.Type][newID] = entity
+    EntityStorage[entity.Ident][newID] = entity
     // since we now stored the entity we can unlock
     // the storage ressource and return the ID
-    EntityStorageMutex[entity.Ident][entity.Type].Unlock()
+    EntityStorageMutex[entity.Ident].Unlock()
     // create the mutex for our ressource on
     // relation. we have to create the sub maps too
     // golang things....
-    var tmpMap1             = make(map[int]map[int]*sync.Mutex)
-    RelationStorageMutex[1] = tmp1
-    RelationStorageMutex[2] = tmp1
-    var tmpMap2             = make(map[int]*sync.Mutex)
-    //RelationStorageMutex[1]
-    // ###jba
-    RelationStorageMutex[2][entity.Ident][newId] = &sync.Mutex{}
+    
+    //var tmpMap1              = make(map[int]map[int]*sync.Mutex)
+    //RelationStorageMutex[1]  = tmp1
+    //RelationStorageMutex[2]  = tmp1
+    //var tmpMap2              = make(map[int]*sync.Mutex)
+    //RelationStorageMutex[1][entity.Ident] = tmp2
+    //RelationStorageMutex[2][entity.Ident] = tmp2
+    //RelationStorageMutex[1][entity.Ident][newID] = &sync.Mutex{}
+    //RelationStorageMutex[2][entity.Ident][newID] = &sync.Mutex{}
+    
     // finally we return the new id
-    return newID
+    return newID, nil
 }
 
-func GetEntityByPath(ident int, Type int, id int) (Entity, error){
+func GetEntityByPath(ident int, id int) (Entity, error){
     // lets check if entity witrh the given path exists
-    if entity, ok := EntityStorage[ident][Type][id]; ok {
+    if entity, ok := EntityStorage[ident][id]; ok {
         // if yes we return the entity
         // and nil for error
         return entity, nil
@@ -206,6 +198,26 @@ func GetEntityByPath(ident int, Type int, id int) (Entity, error){
     // we throw an error 
     return Entity{}, errors.New("Entity on given path does not exist.");
 }
+
+
+
+func CreateRelation(Type int, srcIdent int, srcID int, targetIdent int, targetID int) {
+    //if _, ok := RelationStorage[Type][srcIdent][srcID][targetIdent][targetID]; !ok {
+    //
+    //}
+    //if _, ok := RelationStorage[Type][srcIdent][srcID][targetIdent][targetID]; !ok {
+    //
+    //}
+    //if _, ok := RelationStorage[Type][srcIdent][srcID][targetIdent][targetID]; !ok {
+    //
+    //}
+    //if _, ok := RelationStorage[Type][srcIdent][srcID][targetIdent][targetID]; !ok {
+    //
+    //}
+}
+
+
+
 
 func GetEntityByIdentAndType() {
     
@@ -221,10 +233,6 @@ func DeleteEntity() {
 }
 
 func UpdateEntity() {
-    
-}
-
-func CreateRelation() {
     
 }
 

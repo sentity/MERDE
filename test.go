@@ -16,7 +16,6 @@ func main() {
     var i =  storage.CreateEntityIdent("test");
     fmt.Println("Created new ident , retrieved id: ",i)
     var entity storage.Entity
-    entity.Type    = 1
     entity.Ident   = storage.EntityRIdents["test"]
     entity.Context = "thats it"
     entity.Value   = "what a wonderfull world"
@@ -35,7 +34,7 @@ func main() {
     tmp2    := 1
     for tmp2 < max {
         // entity, _ := 
-        storage.GetEntityByPath(1,1,tmp2)
+        storage.GetEntityByPath(1,tmp2)
         //fmt.Printf("%#v", entity)
         tmp2++
     }
