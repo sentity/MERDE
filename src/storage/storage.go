@@ -66,7 +66,7 @@ var RelationStorage       = make(map[int]map[int]map[int]map[int]Relation)
 
 // and relation reverse storage map
 // (for faster queries)              [tIdent][Tid]   [sIdent][sId]
-var RelationRStorage      = make(map[int]map[int]map[int]map[int]Relation) 
+var RelationRStorage      = make(map[int]map[int]map[int]map[int]bool) 
 
 // relation index max id            [sIdent]
 var RelationStorageMutex  = make(map[int]*sync.Mutex)
@@ -121,7 +121,7 @@ func CreateEntityIdent(name string) (int){
     EntityIDMax[newID]        = 0
     // create the base maps in relation storage
     RelationStorage[newID]       = make(map[int]map[int]map[int]Relation)
-    RelationRStorage[newID]      = make(map[int]map[int]map[int]Relation)
+    RelationRStorage[newID]      = make(map[int]map[int]map[int]bool)
     // and the mutex
     RelationStorageMutex[newID]  = &sync.Mutex{}
     // and create the basic submaps for
@@ -176,7 +176,7 @@ func CreateEntity(entity Entity) (int, error){
     // golang things....
     RelationStorageMutex[entity.Ident].Lock()
     RelationStorage[entity.Ident][newID]     = make(map[int]map[int]Relation)
-    RelationRStorage[entity.Ident][newID]    = make(map[int]map[int]Relation)
+    RelationRStorage[entity.Ident][newID]    = make(map[int]map[int]bool)
     RelationStorageMutex[entity.Ident].Unlock()
     // since we now stored the entity and created all
     // needed ressources we can unlock
@@ -235,7 +235,7 @@ func CreateRelation(srcIdent int, srcID int, targetIdent int, targetID int, rela
     }
     // now we prepare the reverse storage if necessary
     if _,ok := RelationRStorage[targetIdent][targetID][srcIdent]; !ok {
-        RelationRStorage[targetIdent][targetID][srcIdent] = make(map[int]Relation)
+        RelationRStorage[targetIdent][targetID][srcIdent] = make(map[int]bool)
     }
     // now we store the relation 
     RelationStorage[srcIdent][srcID][targetIdent][targetID] = relation
@@ -247,7 +247,7 @@ func CreateRelation(srcIdent int, srcID int, targetIdent int, targetID int, rela
     //c := strconv.Itoa(targetIdent)
     //d := strconv.Itoa(targetID)
     //RelationRStorage[targetIdent][targetID][srcIdent][srcID] = a + ":" + b + ":" + c + ":" + d
-    RelationRStorage[targetIdent][targetID][srcIdent][srcID] = &(RelationStorage[srcIdent][srcID][targetIdent][targetID])
+    RelationRStorage[targetIdent][targetID][srcIdent][srcID] = true
     // we are done now we can unlock the entity idents
     EntityStorageMutex[srcIdent].Unlock()
     // if we locked the targetIdent too (see upper)
