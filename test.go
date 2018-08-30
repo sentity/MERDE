@@ -15,14 +15,16 @@ func main() {
     fmt.Println("Test started")
     var i =  storage.CreateEntityIdent("test");
     fmt.Println("Created new ident , retrieved id: ",i)
+    // ---------------------
     var entity storage.Entity
     entity.Ident   = storage.EntityRIdents["test"]
     entity.Context = "thats it"
     entity.Value   = "what a wonderfull world"
-    tmp := 1
-    max := 10000000
-    fmt.Println("Defined value for mass tests: ",max)
+    // ---------------------
     fmt.Println("Starting mass testing:")
+    tmp := 1
+    max := 1000000
+    fmt.Println("Defined value for mass tests: ",max)
     start := time.Now()
     for tmp < max + 1 {
          storage.CreateEntity(entity)
@@ -34,9 +36,7 @@ func main() {
     start2  := time.Now()
     tmp2    := 1
     for tmp2 < max {
-        // entity, _ := 
         storage.GetEntityByPath(1,tmp2)
-        //fmt.Printf("%#v", entity)
         tmp2++
     }
     elapsed2 := time.Since(start2)
@@ -48,7 +48,7 @@ func main() {
     var tmp3 = 1
     var tmp4 = 2
     for tmp4 < max {
-        storage.CreateRelation(1,tmp3,1,tmp4,relation)
+        storage.CreateRelation(1,1,1,2,relation)
         tmp3++
         tmp4++
     }

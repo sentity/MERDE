@@ -177,8 +177,8 @@ func CreateEntity(entity Entity) (int, error){
     // relation. we have to create the sub maps too
     // golang things....
     RelationStorageMutex[entity.Ident].Lock()
-    RelationStorage[entity.Ident][newID]  = make(map[int]map[int]Relation)
-    RelationRStorage[entity.Ident][newID] = make(map[int]map[int]string)
+    RelationStorage[entity.Ident][newID]     = make(map[int]map[int]Relation)
+    RelationRStorage[entity.Ident][newID]    = make(map[int]map[int]string)
     RelationStorageMutex[entity.Ident].Unlock()
     // since we now stored the entity and created all
     // needed ressources we can unlock
@@ -227,8 +227,12 @@ func CreateRelation(srcIdent int, srcID int, targetIdent int, targetID int, rela
         // map either so we should create it too
         // but we will store a pointer to the other
         // maps Relation instead of the complete
-        // relation twice
-        RelationStorage[targetIdent][targetID][srcIdent] = make(map[int]Relation)
+        // relation twice - defunct, refactor later (may create more problems then help)
+        //RelationStorage[targetIdent][targetID][srcIdent] = make(map[int]Relation)
+    }
+    // now we prepare the reverse storage if necessary
+    if _,ok := RelationRStorage[targetIdent][targetID][srcIdent]; !ok {
+        RelationRStorage[targetIdent][targetID][srcIdent] = make(map[int]string)
     }
     // now we store the relation 
     RelationStorage[srcIdent][srcID][targetIdent][targetID] = relation
