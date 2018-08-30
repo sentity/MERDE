@@ -8,6 +8,7 @@ import (
     "sync"
     //"time"
     "errors"
+    "strconv"
     //"strings"
 ) 
 
@@ -51,7 +52,6 @@ var EntityIdentMutex   = &sync.Mutex{}
 // - - - - - - - - - - - - - - - - - - - - - - - - - -
 // relation struct 
 type Relation struct {
-    ID         int
     Context    string
     Source     string
     Target     string
@@ -66,10 +66,10 @@ var RelationStorage       = make(map[int]map[int]map[int]map[int]Relation)
 
 // and relation reverse storage map
 // (for faster queries)              [tIdent][Tid]   [sIdent][sId]
-var RelationRStorage      = make(map[int]map[int]map[int]map[int]string)
+var RelationRStorage      = make(map[int]map[int]map[int]map[int]string) 
 
 // relation index max id            [sIdent][sId] 
-var RelationStorageMutex  = make(map[int]map[int]*sync.Mutex)
+var RelationStorageMutex  = make(map[int]*sync.Mutex)
 
 
 
@@ -121,6 +121,11 @@ func CreateEntityIdent(name string) (int){
     // set the maxID for the new
     // ident type
     EntityIDMax[newID]        = 0
+    // create the base maps in relation storage
+    RelationStorage[newID]       = make(map[int]map[int]map[int]Relation)
+    RelationRStorage[newID]      = make(map[int]map[int]map[int]string)
+    // and the mutex
+    RelationStorageMutex[newID]  = &sync.Mutex{}
     // and create the basic submaps for
     // the relation storage
     // now we unlock the mutex
@@ -167,23 +172,18 @@ func CreateEntity(entity Entity) (int, error){
     // now we store the entity element
     // in the EntityStorage
     EntityStorage[entity.Ident][newID] = entity
-    // since we now stored the entity we can unlock
-    // the storage ressource and return the ID
-    EntityStorageMutex[entity.Ident].Unlock()
+
     // create the mutex for our ressource on
     // relation. we have to create the sub maps too
     // golang things....
-    
-    //var tmpMap1              = make(map[int]map[int]*sync.Mutex)
-    //RelationStorageMutex[1]  = tmp1
-    //RelationStorageMutex[2]  = tmp1
-    //var tmpMap2              = make(map[int]*sync.Mutex)
-    //RelationStorageMutex[1][entity.Ident] = tmp2
-    //RelationStorageMutex[2][entity.Ident] = tmp2
-    //RelationStorageMutex[1][entity.Ident][newID] = &sync.Mutex{}
-    //RelationStorageMutex[2][entity.Ident][newID] = &sync.Mutex{}
-    
-    // finally we return the new id
+    RelationStorageMutex[entity.Ident].Lock()
+    RelationStorage[entity.Ident][newID]  = make(map[int]map[int]Relation)
+    RelationRStorage[entity.Ident][newID] = make(map[int]map[int]string)
+    RelationStorageMutex[entity.Ident].Unlock()
+    // since we now stored the entity and created all
+    // needed ressources we can unlock
+    // the storage ressource and return the ID (or err)
+    EntityStorageMutex[entity.Ident].Unlock()
     return newID, nil
 }
 
@@ -201,19 +201,51 @@ func GetEntityByPath(ident int, id int) (Entity, error){
 
 
 
-func CreateRelation(Type int, srcIdent int, srcID int, targetIdent int, targetID int) {
-    //if _, ok := RelationStorage[Type][srcIdent][srcID][targetIdent][targetID]; !ok {
-    //
-    //}
-    //if _, ok := RelationStorage[Type][srcIdent][srcID][targetIdent][targetID]; !ok {
-    //
-    //}
-    //if _, ok := RelationStorage[Type][srcIdent][srcID][targetIdent][targetID]; !ok {
-    //
-    //}
-    //if _, ok := RelationStorage[Type][srcIdent][srcID][targetIdent][targetID]; !ok {
-    //
-    //}
+func CreateRelation(srcIdent int, srcID int, targetIdent int, targetID int, relation Relation) (bool,error) {
+    
+    // lets make sure the source ident exist
+    if _,ok := EntityIdents[srcIdent] ; !ok {
+        return false, errors.New("Source ident not existing")
+    }
+    // and the target ident exists too
+    if _,ok := EntityIdents[targetIdent] ; !ok {
+        return false, errors.New("Target ident not existing")
+    }
+    // Now we lock the to link entities to
+    // make sure they dont get deletet meawhile
+    EntityStorageMutex[srcIdent].Lock()
+    EntityStorageMutex[targetIdent].Lock()
+    // now we lock the relation mutex
+    RelationStorageMutex[srcIdent].Lock()
+    // lets check if their exists a map for our
+    // source entity to the target ident if not
+    // create it.... golang things...
+    if _, ok := RelationStorage[srcIdent][srcID][targetIdent]; !ok {
+        RelationStorage[srcIdent][srcID][targetIdent] = make(map[int]Relation)
+        // if the map doesnt exist in this direction
+        // it wont exist in the other as in reverse
+        // map either so we should create it too
+        // but we will store a pointer to the other
+        // maps Relation instead of the complete
+        // relation twice
+        RelationStorage[targetIdent][targetID][srcIdent] = make(map[int]Relation)
+    }
+    // now we store the relation 
+    RelationStorage[srcIdent][srcID][targetIdent][targetID] = relation
+    // and a pointer in the reverse index
+    //RelationRStorage[targetIdent][targetID][srcIdent][srcID] = &RelationStorage[srcIdent][srcID][targetIdent][targetID]
+    // since the solution above doesnt work atm we do the following workarround temporary
+    a := strconv.Itoa(srcIdent)
+    b := strconv.Itoa(srcID)
+    c := strconv.Itoa(targetIdent)
+    d := strconv.Itoa(targetID)
+    RelationRStorage[targetIdent][targetID][srcIdent][srcID] = a + ":" + b + ":" + c + ":" + d
+    // we are done now we can unlock the entity idents
+    EntityStorageMutex[srcIdent].Unlock()
+    EntityStorageMutex[targetIdent].Unlock()
+    // and finally unlock the relation ident and return
+    RelationStorageMutex[srcIdent].Unlock()
+    return true, nil
 }
 
 

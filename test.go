@@ -29,7 +29,8 @@ func main() {
          tmp++
     }
     elapsed := time.Since(start)
-    fmt.Println("Insert done in:",elapsed)
+    fmt.Println("Entity insert done in:",elapsed)
+    // ---------------------
     start2  := time.Now()
     tmp2    := 1
     for tmp2 < max {
@@ -39,7 +40,19 @@ func main() {
         tmp2++
     }
     elapsed2 := time.Since(start2)
-    fmt.Println("Read done in:",elapsed2)
-    
+    fmt.Println("Entity read done in:",elapsed2)
+    // ---------------------
+    var relation storage.Relation
+    relation.Context = "thats it"
+    start3  := time.Now()
+    var tmp3 = 1
+    var tmp4 = 2
+    for tmp4 < max {
+        storage.CreateRelation(1,tmp3,1,tmp4,relation)
+        tmp3++
+        tmp4++
+    }
+    elapsed3 := time.Since(start3)
+    fmt.Println("Relation insert done in: ",elapsed3)
     
 }
