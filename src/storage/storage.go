@@ -68,7 +68,7 @@ var RelationStorage       = make(map[int]map[int]map[int]map[int]Relation)
 // (for faster queries)              [tIdent][Tid]   [sIdent][sId]
 var RelationRStorage      = make(map[int]map[int]map[int]map[int]string) 
 
-// relation index max id            [sIdent][sId] 
+// relation index max id            [sIdent]
 var RelationStorageMutex  = make(map[int]*sync.Mutex)
 
 
@@ -84,8 +84,6 @@ var RelationStorageMutex  = make(map[int]*sync.Mutex)
 func init() {
     // first we gonne create the mutex
     // maps inside the RelationStorage
-    //RelationStorageMutex[1]   = make(map[string]*sync.Mutex)
-    //RelationStorageMutex[2]   = make(map[string]*sync.Mutex)
 }
 
 
@@ -214,7 +212,12 @@ func CreateRelation(srcIdent int, srcID int, targetIdent int, targetID int, rela
     // Now we lock the to link entities to
     // make sure they dont get deletet meawhile
     EntityStorageMutex[srcIdent].Lock()
-    EntityStorageMutex[targetIdent].Lock()
+    // if srcIdent and targetIdent differ,
+    // we lock targetIdent too else we
+    // would create deadlock
+    if srcIdent != targetIdent {
+        EntityStorageMutex[targetIdent].Lock()
+    }
     // now we lock the relation mutex
     RelationStorageMutex[srcIdent].Lock()
     // lets check if their exists a map for our
@@ -246,7 +249,11 @@ func CreateRelation(srcIdent int, srcID int, targetIdent int, targetID int, rela
     RelationRStorage[targetIdent][targetID][srcIdent][srcID] = a + ":" + b + ":" + c + ":" + d
     // we are done now we can unlock the entity idents
     EntityStorageMutex[srcIdent].Unlock()
-    EntityStorageMutex[targetIdent].Unlock()
+    // if we locked the targetIdent too (see upper)
+    // than we have to unlock it too
+    if srcIdent != targetIdent {
+        EntityStorageMutex[targetIdent].Unlock()
+    }
     // and finally unlock the relation ident and return
     RelationStorageMutex[srcIdent].Unlock()
     return true, nil

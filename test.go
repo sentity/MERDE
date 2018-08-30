@@ -48,7 +48,7 @@ func main() {
     var tmp3 = 1
     var tmp4 = 2
     for tmp4 < max {
-        storage.CreateRelation(1,1,1,2,relation)
+        storage.CreateRelation(1,tmp3,1,tmp4,relation)
         tmp3++
         tmp4++
     }
