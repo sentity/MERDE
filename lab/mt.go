@@ -1,4 +1,4 @@
-package main
+ppackage main
 
 // handle all the imports
 import (

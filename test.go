@@ -23,7 +23,8 @@ func main() {
     // ---------------------
     fmt.Println("Starting mass testing:")
     tmp := 1
-    max := 1000000
+    //max := 1000000
+    max := 10
     fmt.Println("Defined value for mass tests: ",max)
     start := time.Now()
     for tmp < max + 1 {
@@ -48,11 +49,15 @@ func main() {
     var tmp3 = 1
     var tmp4 = 2
     for tmp4 < max {
-        storage.CreateRelation(1,tmp3,1,tmp4,relation)
+        storage.CreateRelation(1,1,1,tmp4,relation)
         tmp3++
         tmp4++
     }
     elapsed3 := time.Since(start3)
     fmt.Println("Relation insert done in: ",elapsed3)
-    
+    // ---------------------
+    start4   := time.Now()
+    storage.GetRelationsBySourceIdentAndSourceId(1,2)
+    elapsed4 := time.Since(start4)
+    fmt.Println("Relation read (nax* out from 1:1) done in: ",elapsed4)
 }

@@ -97,3 +97,12 @@ func main() {
     elapsed := time.Since(start)
     fmt.Println("Line amount parsed", i , " | Done in ",elapsed, " Seconds | Storage Map Size",len(store) )
 }
+
+
+{
+    "Ident" : "Kunde",
+    "value" : "Salamander",
+    "children" : {
+        
+    }
+}

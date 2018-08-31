@@ -2,12 +2,13 @@ package storage
 
 // handle all the imports
 import (
-	//"fmt"
+	"fmt"
 	//"os"
     //"math/rand"
     //"time"
     //"strconv"
     //"strings"
+    //"builtin"
     "errors"
     "sync"
 ) 
@@ -256,6 +257,19 @@ func CreateRelation(srcIdent int, srcID int, targetIdent int, targetID int, rela
     return true, nil
 }
 
+func GetRelationsBySourceIdentAndSourceId(ident int, id int) (map[int]Relation , error) {
+    fmt.Printf("%#v", RelationStorage[ident][2]) 
+    var mapRet = make(map[int]Relation)
+    var cnt    = 0
+    for _,targetIdentMap := range RelationStorage[ident][id] {
+        for _,relation := range targetIdentMap {
+            mapRet[cnt] = relation
+            cnt++
+        }
+    }
+    fmt.Println("Relations: ",cnt," - ",len(mapRet))
+    return mapRet, nil
+}
 
 
 
@@ -276,9 +290,7 @@ func UpdateEntity() {
     
 }
 
-func GetRelation() {
-    
-}
+
 
 func DeleteRelation() {
     
