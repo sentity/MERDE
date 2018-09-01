@@ -135,10 +135,6 @@ func CreateEntityIdent(name string) (int, error){
     return newID, nil
 }
 
-//func DeleteEntityIdent() {
-//
-//}
-
 func CreateEntity(entity Entity) (int, error){
     // first we lock the entity ident mutex
     // to make sure while we check for the
@@ -263,18 +259,6 @@ func CreateRelation(srcIdent int, srcID int, targetIdent int, targetID int, rela
     return true, nil
 }
 
-//func GetRelationsBySourceIdentAndSourceId(ident int, id int) (map[int]Relation , error) {
-//    var mapRet = make(map[int]Relation)
-//    var cnt    = 0
-//    for _,targetIdentMap := range RelationStorage[ident][id] {
-//        for _,relation := range targetIdentMap {
-//            mapRet[cnt] = relation
-//            cnt++
-//        }
-//    }
-//    fmt.Println("Relations: ",cnt," - ",len(mapRet))
-//    return mapRet, nil
-//}
 
 func GetRelationsBySourceIdentAndSourceId(ident int, id int) (map[int]Relation , error) {
     // initialice the return map
@@ -294,7 +278,7 @@ func GetRelationsBySourceIdentAndSourceId(ident int, id int) (map[int]Relation ,
         }
     }
     // + + + + + + + 
-    fmt.Println("Relations: ",cnt," - ",len(mapRet))
+    //fmt.Println("Relations: ",cnt," - ",len(mapRet))
     // + + + + + + + 
     return mapRet, nil
 }

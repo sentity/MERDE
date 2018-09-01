@@ -4,10 +4,10 @@ import (
     //"os"
     //"errors"
     "fmt"
-    "time"
+    //"time"
     //"storage"   
     "mapper"
-    //"encoding/json"
+    "encoding/json"
 )
 
 
@@ -75,22 +75,23 @@ func main() {
     var id = TestJsonMap()
     fmt.Println("Testing json mapper - getting from ident ip: and id: ",id)
     TestJsonGet(id)
-    start5   := time.Now()
-    // testing mass insert
-    var i = 0
-    for i < 100000 {
-        TestJsonMap()
-        i++
-    }
-    elapsed5 := time.Since(start5)
-    fmt.Println("3 level entity mapped mass in : ",elapsed5)
-    start6   := time.Now()
-    for i < 100000 {
-        TestJsonGet(i)
-        i++
-    }
-    elapsed6 := time.Since(start6)
-    fmt.Println("3 level entity read mass in : ",elapsed6)
+    // ----------------------    
+    //start5   := time.Now()
+    //// testing mass insert
+    //var i = 0
+    //for i < 100000 {
+    //    TestJsonMap()
+    //    i++
+    //}
+    //elapsed5 := time.Since(start5)
+    //fmt.Println("3 level entity mapped mass in : ",elapsed5)
+    //start6   := time.Now()
+    //for i < 100000 {
+    //    TestJsonGet(i)
+    //    i++
+    //}
+    //elapsed6 := time.Since(start6)
+    //fmt.Println("3 level entity read mass in : ",elapsed6)
 }
 
 
@@ -101,9 +102,9 @@ func TestJsonMap() (int){
 }
 
 func TestJsonGet(id int) () {
-    //ret,_:= mapper.GetEntityRecursive(mapper.HandleIdent("ip"),id)
-    mapper.GetEntityRecursive(mapper.HandleIdent("ip"),id)
+    ret,_:= mapper.GetEntityRecursive(mapper.HandleIdent("ip"),id)
+    //mapper.GetEntityRecursive(mapper.HandleIdent("ip"),id)
     //fmt.Printf("%#v", ret)
-    //out, _    := json.MarshalIndent(ret, "", "  ")
-    //fmt.Print(string(out))  
+    out, _    := json.MarshalIndent(ret, "", "  ")
+    fmt.Print(string(out))  
 }

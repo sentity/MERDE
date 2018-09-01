@@ -40,12 +40,10 @@ type Relatiion struct {
 }
 
 
-//func main() {
-    //jsonString := []byte(`{"Context":"asd","Ident":1,"Value":"it works yippiyey","Properties":{"onekey":"onevalue","twokey":"twovalue"},"childrem":{}}`)
-
-//}
-
 func MapJson(data []byte) ( int,  error) {
+    // define an entity struct as template
+    // for json unmarshal and parse the
+    // json byte array into the var
     var entity Entity
     if err := json.Unmarshal(data, &entity); err != nil {
         return -1 , errors.New("Invalid Json")
@@ -118,7 +116,6 @@ func GetEntityRecursive(entityIdent int, entityID int) (Entity, error){
     if err != nil {
         return Entity{}, errors.New("Entity with give path does not exist")
     }
-
     // now we define the data into
     // mapper entity struct
     returnEntity := Entity{
@@ -128,32 +125,25 @@ func GetEntityRecursive(entityIdent int, entityID int) (Entity, error){
         Context : entity.Context,
         Properties : entity.Properties,
     }
-    // since the properties are a
-    // map we need to create the map
-    // before inserting
-    //var tmpPropertyMap = make(mape[string]string)
-    //returnEntity.Properties = tmp
     // now we retrieve all relations
     // from this entity
     tmpRelations, _ := storage.GetRelationsBySourceIdentAndSourceId(entity.Ident,entity.ID)
     // lets check if we got anyrelations
     if len(tmpRelations) != 0 {
         returnEntity.Children = make(map[int]Entity)
-        // there are children lets iteater over
-        // the map 
+        // there are children lets iterate 
+        // through the map 
         var i = 0
         for _, tmpRelation := range tmpRelations {
             i++
             // call the function recursive and add the object
             var tmpEntity,_ = GetEntityRecursive(tmpRelation.TargetIdent,
                                                  tmpRelation.TargetID)
-
+            // store the subentity in child field
             returnEntity.Children[i] = tmpEntity
-            // pas the child entity and the parent coords to
-            // create the relation after inserting the entity
-
         }
     }
+    // return the entity
     return returnEntity, nil
 }
 
