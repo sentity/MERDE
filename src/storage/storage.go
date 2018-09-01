@@ -93,7 +93,7 @@ func init() {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Create an entity ident
-func CreateEntityIdent(name string) (int){
+func CreateEntityIdent(name string) (int, error){
     // first of allw e lock
     EntityIdentMutex.Lock()
     // lets check if the ident allready exists
@@ -101,7 +101,7 @@ func CreateEntityIdent(name string) (int){
     if id, ok := EntityRIdents[name]; ok {
         // dont forget to unlock
         EntityIdentMutex.Unlock()
-        return id
+        return id, nil
     }
     // ok entity doesnt exist yet, lets
     // upcount our ID Max and copy it
@@ -132,7 +132,7 @@ func CreateEntityIdent(name string) (int){
     // now we unlock the mutex
     // and return the new id
     EntityIdentMutex.Unlock()
-    return newID
+    return newID, nil
 }
 
 //func DeleteEntityIdent() {
@@ -252,8 +252,8 @@ func CreateRelation(srcIdent int, srcID int, targetIdent int, targetID int, rela
     // if we locked the targetIdent too (see upper)
     // than we have to unlock it too
     // + + + + + + +
-    fmt.Println(srcIdent , " - " , srcID , " - ", targetIdent , " - ",targetID)
-    fmt.Printf("%#v", RelationStorage[srcIdent][srcID][targetIdent][targetID]) 
+    //fmt.Println(srcIdent , " - " , srcID , " - ", targetIdent , " - ",targetID)
+    //fmt.Printf("%#v", RelationStorage[srcIdent][srcID][targetIdent][targetID]) 
     // + + + + + + + 
     if srcIdent != targetIdent {
         EntityStorageMutex[targetIdent].Unlock()
@@ -277,17 +277,25 @@ func CreateRelation(srcIdent int, srcID int, targetIdent int, targetID int, rela
 //}
 
 func GetRelationsBySourceIdentAndSourceId(ident int, id int) (map[int]Relation , error) {
+    // initialice the return map
     var mapRet = make(map[int]Relation)
+    // set counter for the loop
     var cnt    = 0
+    // copy the pool we have to search in
     var pool   = RelationStorage[ident][id];
+    // for each possible targtIdent
     for _,targetIdentMap := range pool {
+        // for each possible targetId per targetIdent
         for _,relation := range targetIdentMap {
+            // copy the relation into the return map
+            // and upcount the int
             mapRet[cnt] = relation
             cnt++
         }
     }
-    debugPrint(mapRet)
+    // + + + + + + + 
     fmt.Println("Relations: ",cnt," - ",len(mapRet))
+    // + + + + + + + 
     return mapRet, nil
 }
 
