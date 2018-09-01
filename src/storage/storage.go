@@ -9,12 +9,13 @@ import (
     //"strconv"
     //"strings"
     //"builtin"
+    "encoding/json"
     "errors"
     "sync"
-) 
+)
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - -
-// entity struct 
+// entity struct
 type Entity struct {
     ID         int
     Ident      int
@@ -28,13 +29,13 @@ type Entity struct {
 var EntityStorage      = make(map[int]map[int]Entity)
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - -
-// entity storage id max         [Ident]  
+// entity storage id max         [Ident]
 var EntityIDMax        = make(map[int]int)
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - -
 // entity storage mutex is a per ident mutex so write
 // operations only block on ident + type
-//                               [ident] 
+//                               [ident]
 var EntityStorageMutex = make(map[int]*sync.Mutex )
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -51,11 +52,13 @@ var EntityIdentMutex   = &sync.Mutex{}
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - -
-// relation struct 
+// relation struct
 type Relation struct {
-    Context    string
-    Source     string
-    Target     string
+    SourceIdent  int
+    SourceID     int
+    TargetIdent  int
+    TargetID     int
+    Context      string
     Properties map[string]string
 }
 
@@ -77,7 +80,7 @@ var RelationStorageMutex  = make(map[int]*sync.Mutex)
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - -
-// + + + + + + FUNCTIONS + + + + + + 
+// + + + + + + FUNCTIONS + + + + + +
 // - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -86,7 +89,6 @@ func init() {
     // first we gonne create the mutex
     // maps inside the RelationStorage
 }
-
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -134,7 +136,7 @@ func CreateEntityIdent(name string) (int){
 }
 
 //func DeleteEntityIdent() {
-//    
+//
 //}
 
 func CreateEntity(entity Entity) (int, error){
@@ -144,7 +146,7 @@ func CreateEntity(entity Entity) (int, error){
     // may sound like a very rare upcoming case,
     //but better be safe than sorry
     EntityIdentMutex.Lock()
-    // now 
+    // now
     if _, ok := EntityIdents[entity.Ident]; !ok {
         // the ident doest exist, lets unlock
         // the ident mutex and return -1 for fail0r
@@ -171,7 +173,7 @@ func CreateEntity(entity Entity) (int, error){
     // now we store the entity element
     // in the EntityStorage
     EntityStorage[entity.Ident][newID] = entity
-
+    
     // create the mutex for our ressource on
     // relation. we have to create the sub maps too
     // golang things....
@@ -194,8 +196,8 @@ func GetEntityByPath(ident int, id int) (Entity, error){
         return entity, nil
     }
     // the path seems to result empty , so
-    // we throw an error 
-    return Entity{}, errors.New("Entity on given path does not exist.");
+    // we throw an error
+    return Entity{}, errors.New("Entity on given path does not exist.")
 }
 
 
@@ -238,7 +240,7 @@ func CreateRelation(srcIdent int, srcID int, targetIdent int, targetID int, rela
     if _,ok := RelationRStorage[targetIdent][targetID][srcIdent]; !ok {
         RelationRStorage[targetIdent][targetID][srcIdent] = make(map[int]bool)
     }
-    // now we store the relation 
+    // now we store the relation
     RelationStorage[srcIdent][srcID][targetIdent][targetID] = relation
     // and an entry into the reverse index, its existence
     // allows us to use the coords in the normal index to revtrieve
@@ -249,6 +251,10 @@ func CreateRelation(srcIdent int, srcID int, targetIdent int, targetID int, rela
     EntityStorageMutex[srcIdent].Unlock()
     // if we locked the targetIdent too (see upper)
     // than we have to unlock it too
+    // + + + + + + +
+    fmt.Println(srcIdent , " - " , srcID , " - ", targetIdent , " - ",targetID)
+    fmt.Printf("%#v", RelationStorage[srcIdent][srcID][targetIdent][targetID]) 
+    // + + + + + + + 
     if srcIdent != targetIdent {
         EntityStorageMutex[targetIdent].Unlock()
     }
@@ -257,46 +263,42 @@ func CreateRelation(srcIdent int, srcID int, targetIdent int, targetID int, rela
     return true, nil
 }
 
+//func GetRelationsBySourceIdentAndSourceId(ident int, id int) (map[int]Relation , error) {
+//    var mapRet = make(map[int]Relation)
+//    var cnt    = 0
+//    for _,targetIdentMap := range RelationStorage[ident][id] {
+//        for _,relation := range targetIdentMap {
+//            mapRet[cnt] = relation
+//            cnt++
+//        }
+//    }
+//    fmt.Println("Relations: ",cnt," - ",len(mapRet))
+//    return mapRet, nil
+//}
+
 func GetRelationsBySourceIdentAndSourceId(ident int, id int) (map[int]Relation , error) {
-    fmt.Printf("%#v", RelationStorage[ident][2]) 
     var mapRet = make(map[int]Relation)
     var cnt    = 0
-    for _,targetIdentMap := range RelationStorage[ident][id] {
+    var pool   = RelationStorage[ident][id];
+    for _,targetIdentMap := range pool {
         for _,relation := range targetIdentMap {
             mapRet[cnt] = relation
             cnt++
         }
     }
+    debugPrint(mapRet)
     fmt.Println("Relations: ",cnt," - ",len(mapRet))
     return mapRet, nil
 }
-
-
 
 func GetEntityByIdentAndType() {
     
     
 }
 
-func GetEntityByIdent() {
-    
+func debugPrint(param map[int]Relation) {
+    fmt.Println("- - - - - - - - - - \n")
+    out, _    := json.MarshalIndent(param, "", "  ")
+    fmt.Print(string(out))  
+    fmt.Println("- - - - - - - - - - \n")
 }
-
-func DeleteEntity() {
-    
-}
-
-func UpdateEntity() {
-    
-}
-
-
-
-func DeleteRelation() {
-    
-}
-
-func UpdateRelation() {
-    
-}
-

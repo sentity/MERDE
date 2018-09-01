@@ -28,8 +28,9 @@ func main() {
     fmt.Println("Defined value for mass tests: ",max)
     start := time.Now()
     for tmp < max + 1 {
-         storage.CreateEntity(entity)
-         tmp++
+        entity.ID = tmp
+        storage.CreateEntity(entity)
+        tmp++
     }
     elapsed := time.Since(start)
     fmt.Println("Entity insert done in:",elapsed)
@@ -49,6 +50,10 @@ func main() {
     var tmp3 = 1
     var tmp4 = 2
     for tmp4 < max {
+        relation.SourceIdent  = 1
+        relation.SourceID     = 1
+        relation.TargetIdent  = 1
+        relation.TargetID     = tmp4
         storage.CreateRelation(1,1,1,tmp4,relation)
         tmp3++
         tmp4++
@@ -57,7 +62,7 @@ func main() {
     fmt.Println("Relation insert done in: ",elapsed3)
     // ---------------------
     start4   := time.Now()
-    storage.GetRelationsBySourceIdentAndSourceId(1,2)
+    storage.GetRelationsBySourceIdentAndSourceId(1,1)
     elapsed4 := time.Since(start4)
     fmt.Println("Relation read (nax* out from 1:1) done in: ",elapsed4)
 }
