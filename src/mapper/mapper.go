@@ -111,5 +111,50 @@ func HandleIdent (strIdent string) (int){
     return newID
 }
 
+func GetEntityRecursive(entityIdent int, entityID int) (Entity, error){
+    // first we get the entity
+    entity, err := storage.GetEntityByPath(entityIdent, entityID)
+    // if it doesnt exist we stop
+    if err != nil {
+        return Entity{}, errors.New("Entity with give path does not exist")
+    }
+
+    // now we define the data into
+    // mapper entity struct
+    returnEntity := Entity{
+        ID      : entity.ID,
+        Ident   : storage.EntityIdents[entity.Ident],
+        Value   : entity.Value,
+        Context : entity.Context,
+        Properties : entity.Properties,
+    }
+    // since the properties are a
+    // map we need to create the map
+    // before inserting
+    //var tmpPropertyMap = make(mape[string]string)
+    //returnEntity.Properties = tmp
+    // now we retrieve all relations
+    // from this entity
+    tmpRelations, _ := storage.GetRelationsBySourceIdentAndSourceId(entity.Ident,entity.ID)
+    // lets check if we got anyrelations
+    if len(tmpRelations) != 0 {
+        returnEntity.Children = make(map[int]Entity)
+        // there are children lets iteater over
+        // the map 
+        var i = 0
+        for _, tmpRelation := range tmpRelations {
+            i++
+            // call the function recursive and add the object
+            var tmpEntity,_ = GetEntityRecursive(tmpRelation.TargetIdent,
+                                                 tmpRelation.TargetID)
+
+            returnEntity.Children[i] = tmpEntity
+            // pas the child entity and the parent coords to
+            // create the relation after inserting the entity
+
+        }
+    }
+    return returnEntity, nil
+}
 
 
