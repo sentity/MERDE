@@ -100,11 +100,14 @@ func MapEntitiesRecursive(entity Entity,parentIdent int,parentID int ) ( int,  e
 }
 
 func HandleIdent (strIdent string) (int){
-    // lets check if this ident exists
-    if id,ok := storage.EntityRIdents[strIdent]; ok {
+    // get the ident id by string
+    id,_ := storage.GetIdentIdByString(strIdent)
+    if -1 != id   {
         // it does lets return it
         return id
     }
+    // it didnt exist so we create it and return
+    // the new id
     newID,_ := storage.CreateEntityIdent(strIdent)
     return newID
 }
@@ -119,10 +122,10 @@ func GetEntityRecursive(entityIdent int, entityID int) (Entity, error){
     // now we define the data into
     // mapper entity struct
     returnEntity := Entity{
-        ID      : entity.ID,
-        Ident   : storage.EntityIdents[entity.Ident],
-        Value   : entity.Value,
-        Context : entity.Context,
+        ID         : entity.ID,
+        Ident      : storage.EntityIdents[entity.Ident],
+        Value      : entity.Value,
+        Context    : entity.Context,
         Properties : entity.Properties,
     }
     // now we retrieve all relations
