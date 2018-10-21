@@ -3,17 +3,25 @@ package main
 import (
     //"os"
     //"errors"
-    "fmt"
-    //"time"
+
+    "time"
     //"storage"   
+    "fmt"
     "mapper"
     "encoding/json"
+    //"connector"
 )
 
 
-
+var JsonMapThreadTest = make(map[string]bool)
 
 func main() {
+    //connector.Listen()
+    tests()
+}
+
+
+func tests() {
     //fmt.Println("Test started")
     //i,_ :=  storage.CreateEntityIdent("test");
     //fmt.Println("Created new ident , retrieved id: ",i)
@@ -25,7 +33,7 @@ func main() {
     // ---------------------
     //fmt.Println("Starting mass testing:")
     //tmp := 1
-    //max := 1000000
+    //max := 100000
     ////max := 10
     //fmt.Println("Defined value for mass tests: ", max)
     //start := time.Now()
@@ -71,10 +79,10 @@ func main() {
     //elapsed4 := time.Since(start4)
     //fmt.Println("Relation read (nax* out from 1:1) done in: ",elapsed4)
     // ----------------------
-    fmt.Println("Testing json mapper - inserting")
-    var id = TestJsonMap()
-    fmt.Println("Testing json mapper - getting from ident ip: and id: ",id)
-    TestJsonGet(id)
+    //fmt.Println("Testing json mapper - inserting")
+    //var id = TestJsonMap()
+    //fmt.Println("Testing json mapper - getting from ident ip: and id: ",id)
+    //TestJsonGet(id)
     // ----------------------    
     //start5   := time.Now()
     //// testing mass insert
@@ -92,6 +100,50 @@ func main() {
     //}
     //elapsed6 := time.Since(start6)
     //fmt.Println("3 level entity read mass in : ",elapsed6)
+    // ----------------------    
+    start7   := time.Now()
+    max      := 100000
+    // testing mass insert
+    JsonMapThreadTest["thread1"] = false
+    JsonMapThreadTest["thread2"] = false
+    go JsonMapThread1(max)
+    //go JsonMapThread2(max)
+    for JsonMapThreadTest["thread1"] != true && JsonMapThreadTest["thread2"] != true {
+        time.Sleep(1000000)
+    }
+    elapsed7 := time.Since(start7)
+    fmt.Println("3 level entity mapped in 2 threads mass in : ",elapsed7)
+    fmt.Println("Mass read :");
+    start8   := time.Now()
+    i := 0
+    for i < max {
+        mapper.GetEntityRecursive(mapper.HandleIdent("ip"),i)
+        i++
+    }
+    elapsed8 := time.Since(start8)
+    fmt.Println("3 level entity read in 1 thread mass amount : ",max , " in " , elapsed8)
+}
+
+func JsonMapThread1(max int)  {
+    i := 0
+    for i < max{
+        TestJsonMap()
+        //fmt.Println("Thead 1 run: ",i);
+        i++
+    }
+    fmt.Println("Thread 1 done. Wrote ", i , " 3level entities")
+    JsonMapThreadTest["thread1"] = true
+}
+
+func JsonMapThread2(max int) {
+    i := 0
+    for i < max{
+        TestJsonMap()
+        //fmt.Println("Thead 2 run: ",i);
+        i++
+    }
+    fmt.Println("Thread 2 done. Wrote ", i , " 3level entities")
+    JsonMapThreadTest["thread2"] = true
 }
 
 

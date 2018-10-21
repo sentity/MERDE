@@ -233,24 +233,6 @@ func CreateRelation(srcIdent int, srcID int, targetIdent int, targetID int, rela
         return false, errors.New("Target ident not existing")
     }
     //// - - - - - - - - - - - - - - - - - 
-    //// ### test outcommented to review
-    //// Identities seem to exist, we unlock the ident mutex
-    //EntityIdentMutex.RUnlock()
-    //// Now we lock the to link entities to
-    //// make sure they dont get deletet meawhile
-    //EntityStorageMasterMutex.Lock()
-    //EntityStorageMutex[srcIdent].Lock() 
-    //EntityStorageMasterMutex.Unlock()
-    //// if srcIdent and targetIdent differ,
-    //// we lock targetIdent too else we
-    //// would create deadlock
-    //if srcIdent != targetIdent {
-    //    EntityStorageMasterMutex.Lock()
-    //    EntityStorageMutex[targetIdent].Lock()
-    //    EntityStorageMasterMutex.Unlock()
-    //}
-    //// ### test outcommented to review
-    //// - - - - - - - - - - - - - - - - - 
     // now we lock the relation mutex
     printMutexActions("CreateRelation.RelationStorageMutex.Lock");
     RelationStorageMutex.Lock()
@@ -279,19 +261,6 @@ func CreateRelation(srcIdent int, srcID int, targetIdent int, targetID int, rela
     // allow pointer on submaps in nested maps
     RelationRStorage[targetIdent][targetID][srcIdent][srcID] = true
     // we are done now we can unlock the entity idents
-    //// - - - - - - - - - - - - - - - - - 
-    //// ### test outcommented to review
-    //EntityStorageMasterMutex.Lock()
-    //EntityStorageMutex[srcIdent].Unlock()
-    //EntityStorageMasterMutex.Unlock()
-    //// if we locked the targetIdent too (see upper)
-    //// than we have to unlock it too
-    //if srcIdent != targetIdent {
-    //    EntityStorageMasterMutex.Lock()
-    //    EntityStorageMutex[targetIdent].Unlock()
-    //    EntityStorageMasterMutex.Unlock()
-    //}
-    //// ### test outcommented to review
     //// - - - - - - - - - - - - - - - - 
      //and finally unlock the relation ident and return
     printMutexActions("CreateRelation.RelationStorageMutex.Unlock");
