@@ -88,13 +88,13 @@ func init() {
 // Create an entity ident
 func CreateEntityIdent(name string) (int, error){
     // first of allw e lock
-    printMutexActions("CreateEntityIdent.EntityIdentMutex.Lock");
+    //printMutexActions("CreateEntityIdent.EntityIdentMutex.Lock");
     EntityIdentMutex.Lock()
     // lets check if the ident allready exists
     // if it does we just return the ID
     if id, ok := EntityRIdents[name]; ok {
         // dont forget to unlock
-        printMutexActions("CreateEntityIdent.EntityIdentMutex.Unlock");
+        //printMutexActions("CreateEntityIdent.EntityIdentMutex.Unlock");
         EntityIdentMutex.Unlock()
         return id, nil
     }
@@ -110,7 +110,7 @@ func CreateEntityIdent(name string) (int, error){
     EntityIdents[newID]          = name
     EntityRIdents[name]          = newID
     // and create mutex for EntityStorage ident+type
-    printMutexActions("CreateEntityIdent.EntityStorageMutex.Lock");
+    //printMutexActions("CreateEntityIdent.EntityStorageMutex.Lock");
     EntityStorageMutex.Lock()
     // now we prepare the submaps in the entity
     // storage itseöf....
@@ -118,20 +118,20 @@ func CreateEntityIdent(name string) (int, error){
     // set the maxID for the new
     // ident type
     EntityIDMax[newID]           = 0
-    printMutexActions("CreateEntityIdent.EntityStorageMutex.Unlock");
+    //printMutexActions("CreateEntityIdent.EntityStorageMutex.Unlock");
     EntityStorageMutex.Unlock()
     // create the base maps in relation storage
-    printMutexActions("CreateEntityIdent.RelationStorageMutex.Lock");
+    //printMutexActions("CreateEntityIdent.RelationStorageMutex.Lock");
     RelationStorageMutex.Lock()
     RelationStorage[newID]       = make(map[int]map[int]map[int]Relation)
     RelationRStorage[newID]      = make(map[int]map[int]map[int]bool)
-    printMutexActions("CreateEntityIdent.RelationStorageMutex.Unlock");
+    //printMutexActions("CreateEntityIdent.RelationStorageMutex.Unlock");
     RelationStorageMutex.Unlock()
     // and create the basic submaps for
     // the relation storage
     // now we unlock the mutex
     // and return the new id
-    printMutexActions("CreateEntityIdent.EntityIdentMutex.Unlock");
+    //printMutexActions("CreateEntityIdent.EntityIdentMutex.Unlock");
     EntityIdentMutex.Unlock()
     return newID, nil
 }
@@ -142,13 +142,13 @@ func CreateEntity(entity Entity) (int, error){
     // existence it doesnt get deletet, this
     // may sound like a very rare upcoming case,
     //but better be safe than sorry
-    printMutexActions("CreateEntity.EntityIdentMutex.RLock");
+    //printMutexActions("CreateEntity.EntityIdentMutex.RLock");
     EntityIdentMutex.RLock()
     // now
     if _, ok := EntityIdents[entity.Ident]; !ok {
         // the ident doest exist, lets unlock
         // the ident mutex and return -1 for fail0r
-        printMutexActions("CreateEntity.EntityIdentMutex.RUnlock");
+        //printMutexActions("CreateEntity.EntityIdentMutex.RUnlock");
         EntityIdentMutex.RUnlock()
         return -1, errors.New("CreateEntity.Entity ident not existing");
     }
@@ -157,7 +157,7 @@ func CreateEntity(entity Entity) (int, error){
     // ident mutex to prevent the ident beeing
     // deleted before we start locking (small
     // timing still possible )
-    printMutexActions("CreateEntity.EntityIdentMutex.RUnlock");
+    //printMutexActions("CreateEntity.EntityIdentMutex.RUnlock");
     EntityIdentMutex.RUnlock()
     // upcount our ID Max and copy it
     // into another variable so we can be sure
@@ -166,7 +166,7 @@ func CreateEntity(entity Entity) (int, error){
     // and set the IDMaxMutex on write Lock
     // lets upcount the entity id max fitting to
     //         [ident]
-    printMutexActions("CreateEntity.EntityStorageMutex.Lock");
+    //printMutexActions("CreateEntity.EntityStorageMutex.Lock");
     EntityStorageMutex.Lock()
     //fmt.Println("CreateEntity.EntityIDMaxMasterMutex.Unlock");
     //EntityIDMaxMasterMutex.Unlock()
@@ -179,16 +179,16 @@ func CreateEntity(entity Entity) (int, error){
     // now we store the entity element
     // in the EntityStorage
     EntityStorage[entity.Ident][newID] = entity
-    printMutexActions("CreateEntity.EntityStorageMutex.Unlock");
+    //printMutexActions("CreateEntity.EntityStorageMutex.Unlock");
     EntityStorageMutex.Unlock()
     // create the mutex for our ressource on
     // relation. we have to create the sub maps too
     // golang things....
-    printMutexActions("CreateEntity.RelationStorageMutex.Lock");
+    //printMutexActions("CreateEntity.RelationStorageMutex.Lock");
     RelationStorageMutex.Lock()
     RelationStorage[entity.Ident][newID]     = make(map[int]map[int]Relation)
     RelationRStorage[entity.Ident][newID]    = make(map[int]map[int]bool)
-    printMutexActions("CreateEntity.RelationStorageMutex.Unlock");
+    //printMutexActions("CreateEntity.RelationStorageMutex.Unlock");
     RelationStorageMutex.Unlock()
     // since we now stored the entity and created all
     // needed ressources we can unlock
@@ -198,16 +198,16 @@ func CreateEntity(entity Entity) (int, error){
 
 func GetEntityByPath(ident int, id int) (Entity, error){
     // lets check if entity witrh the given path exists
-    printMutexActions("GetEntityByPath.EntityStorageMutex.Lock");
+    //printMutexActions("GetEntityByPath.EntityStorageMutex.Lock");
     EntityStorageMutex.Lock()
     if entity, ok := EntityStorage[ident][id]; ok {
         // if yes we return the entity
         // and nil for error
-        printMutexActions("GetEntityByPath.EntityStorageMutex.Unlock");
+        //printMutexActions("GetEntityByPath.EntityStorageMutex.Unlock");
         EntityStorageMutex.Unlock()
         return entity, nil
     }
-    printMutexActions("GetEntityByPath.EntityStorageMutex.Unlock");
+    //printMutexActions("GetEntityByPath.EntityStorageMutex.Unlock");
     EntityStorageMutex.Unlock()
     // the path seems to result empty , so
     // we throw an error
@@ -218,23 +218,23 @@ func GetEntityByPath(ident int, id int) (Entity, error){
 
 func CreateRelation(srcIdent int, srcID int, targetIdent int, targetID int, relation Relation) (bool,error) {
     // first we Readlock the EntityIdentMutex
-    printMutexActions("CreateRelation.EntityIdentMutex.RLock");
+    //printMutexActions("CreateRelation.EntityIdentMutex.RLock");
     EntityIdentMutex.RLock()
     // lets make sure the source ident exist
     if _,ok := EntityIdents[srcIdent] ; !ok {
-        printMutexActions("CreateRelation.EntityIdentMutex.RUnlock");
+        //printMutexActions("CreateRelation.EntityIdentMutex.RUnlock");
         EntityIdentMutex.RUnlock()
         return false, errors.New("Source ident not existing")
     }
     // and the target ident exists too
     if _,ok := EntityIdents[targetIdent] ; !ok {
-        printMutexActions("CreateRelation.EntityIdentMutex.RUnlock");
+        //printMutexActions("CreateRelation.EntityIdentMutex.RUnlock");
         EntityIdentMutex.RUnlock()
         return false, errors.New("Target ident not existing")
     }
     //// - - - - - - - - - - - - - - - - - 
     // now we lock the relation mutex
-    printMutexActions("CreateRelation.RelationStorageMutex.Lock");
+    //printMutexActions("CreateRelation.RelationStorageMutex.Lock");
     RelationStorageMutex.Lock()
     // lets check if their exists a map for our
     // source entity to the target ident if not
@@ -263,7 +263,7 @@ func CreateRelation(srcIdent int, srcID int, targetIdent int, targetID int, rela
     // we are done now we can unlock the entity idents
     //// - - - - - - - - - - - - - - - - 
      //and finally unlock the relation ident and return
-    printMutexActions("CreateRelation.RelationStorageMutex.Unlock");
+    //printMutexActions("CreateRelation.RelationStorageMutex.Unlock");
     RelationStorageMutex.Unlock()
     return true, nil
 }
@@ -280,10 +280,10 @@ func GetRelationsBySourceIdentAndSourceId(ident int, id int) (map[int]Relation ,
     // fitting ident. this allows us to proceed
     // faster since we just block to copy instead
     // of blocking for the whole process
-    printMutexActions("GetRelationsBySourceIdentAndSourceId.RelationStorageMutex.Lock");
+    //printMutexActions("GetRelationsBySourceIdentAndSourceId.RelationStorageMutex.Lock");
     RelationStorageMutex.Lock()
     var pool   = RelationStorage[ident][id];
-    printMutexActions("GetRelationsBySourceIdentAndSourceId.RelationStorageMutex.Unlock");
+    //printMutexActions("GetRelationsBySourceIdentAndSourceId.RelationStorageMutex.Unlock");
     RelationStorageMutex.Unlock()
     // for each possible targtIdent
     for _,targetIdentMap := range pool {
@@ -302,31 +302,31 @@ func GetRelationsBySourceIdentAndSourceId(ident int, id int) (map[int]Relation ,
 }
 
 func IdentExists(strIdent string) (bool){
-    printMutexActions("IdentExists.EntityIdentMutex.RLock");
+    //printMutexActions("IdentExists.EntityIdentMutex.RLock");
     EntityIdentMutex.RLock()
     // lets check if this ident exists
     if _,ok := EntityRIdents[strIdent]; ok {
         // it does lets return it
-        printMutexActions("IdentExists.EntityIdentMutex.RUnlock");
+        //printMutexActions("IdentExists.EntityIdentMutex.RUnlock");
         EntityIdentMutex.RUnlock()
         return true
     }
-    printMutexActions("IdentExists.EntityIdentMutex.RUnlock");
+    //printMutexActions("IdentExists.EntityIdentMutex.RUnlock");
     EntityIdentMutex.RUnlock()
     return false
 }
 
 func GetIdentIdByString(strIdent string)(int,error) {
-    printMutexActions("IdentExists.EntityIdentMutex.RLock");
+    //printMutexActions("IdentExists.EntityIdentMutex.RLock");
     EntityIdentMutex.RLock()
     // lets check if this ident exists
     if id,ok := EntityRIdents[strIdent]; ok {
         // it does lets return it
-        printMutexActions("IdentExists.EntityIdentMutex.RUnlock");
+        //printMutexActions("IdentExists.EntityIdentMutex.RUnlock");
         EntityIdentMutex.RUnlock()
         return id, nil
     }
-    printMutexActions("IdentExists.EntityIdentMutex.RUnlock");
+    //printMutexActions("IdentExists.EntityIdentMutex.RUnlock");
     EntityIdentMutex.RUnlock()
     return -1, errors.New("Entity ident string does not exist")
 }

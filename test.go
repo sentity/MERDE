@@ -3,21 +3,20 @@ package main
 import (
     //"os"
     //"errors"
-
     "time"
     //"storage"   
     "fmt"
     "mapper"
     "encoding/json"
-    //"connector"
+    "connector"
 )
 
 
 var JsonMapThreadTest = make(map[string]bool)
 
 func main() {
-    //connector.Listen()
-    tests()
+    connector.Listen()
+    //tests()
 }
 
 
@@ -102,14 +101,14 @@ func tests() {
     //fmt.Println("3 level entity read mass in : ",elapsed6)
     // ----------------------    
     start7   := time.Now()
-    max      := 100000
+    max      := 1000000
     // testing mass insert
     JsonMapThreadTest["thread1"] = false
     JsonMapThreadTest["thread2"] = false
     go JsonMapThread1(max)
     //go JsonMapThread2(max)
     for JsonMapThreadTest["thread1"] != true && JsonMapThreadTest["thread2"] != true {
-        time.Sleep(1000000)
+        time.Sleep(100000)
     }
     elapsed7 := time.Since(start7)
     fmt.Println("3 level entity mapped in 2 threads mass in : ",elapsed7)
@@ -128,7 +127,7 @@ func JsonMapThread1(max int)  {
     i := 0
     for i < max{
         TestJsonMap()
-        //fmt.Println("Thead 1 run: ",i);
+        fmt.Println("Thead 1 run: ",i);
         i++
     }
     fmt.Println("Thread 1 done. Wrote ", i , " 3level entities")
@@ -139,7 +138,7 @@ func JsonMapThread2(max int) {
     i := 0
     for i < max{
         TestJsonMap()
-        //fmt.Println("Thead 2 run: ",i);
+        fmt.Println("Thead 2 run: ",i);
         i++
     }
     fmt.Println("Thread 2 done. Wrote ", i , " 3level entities")
@@ -148,7 +147,8 @@ func JsonMapThread2(max int) {
 
 
 func TestJsonMap() (int){
-    JsonByteArray := []byte(`{"Context":"asd","Ident":"ip","Value":"it works yippiyey","Properties":{"onekey":"onevalue","twokey":"twovalue"},"Children":{"1":{"Context":"im the subobject","Ident":"Port","Value":"subobject kinda cooly","Properties":{"onekey":"udabedi","twokey":"dabedei"},"Children":{"2":{"Context":"im the third and best","Ident":"state","Value":"third depp so deep","Properties":{"onekey":"bass","twokey":"boom"},"Children":{}}}}}}`)
+    JsonByteArray := []byte(`{"Context":"asd","Ident":"ip","Value":"it works yippiyey","Properties":{"onekey":"onevalue","twokey":"twovalue"},"Children":{}}`)
+    //JsonByteArray := []byte(`{"Context":"asd","Ident":"ip","Value":"it works yippiyey","Properties":{"onekey":"onevalue","twokey":"twovalue"},"Children":{"1":{"Context":"im the subobject","Ident":"Port","Value":"subobject kinda cooly","Properties":{"onekey":"udabedi","twokey":"dabedei"},"Children":{"2":{"Context":"im the third and best","Ident":"state","Value":"third depp so deep","Properties":{"onekey":"bass","twokey":"boom"},"Children":{}}}}}}`)
     var id,_ = mapper.MapJson(JsonByteArray)
     return id
 }
