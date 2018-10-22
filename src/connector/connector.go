@@ -35,7 +35,7 @@ var ConnectionIDs     = make(map[int]int)
 var Active            = true
 var MaxID             = 0
 var CompareBytesSmall = make([]byte, 256)
-var CompareBytesBig   = make([]byte, 0, 8 * PackageSize )
+//var CompareBytesBig   = make([]byte, 0, 8 * PackageSize )
 
 func Listen() {
     // Listen for incoming connections.
@@ -179,6 +179,9 @@ func checkBuffer(buffer string, id int) (string, error) {
 
 func handlePackage(data string, id int)  {
     fmt.Println("\nRecieved data from API:\n",data," ",id)
+    ConnectionsMutex.Lock()
+    Connections[id].Connection.Write([]byte("390yes it worked"))
+    ConnectionsMutex.Unlock()
 }
 
 func handlePackageError(conn Connection) {
