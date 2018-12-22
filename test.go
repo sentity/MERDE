@@ -22,7 +22,7 @@ func main() {
 
 func testQueryParser() {
 	testConditionString("property.test=='42'")
-	testConditionString("property.test>'42'&&value%='12'&&test==42")
+	testConditionString("property.test>'42'&&value%='12\\'\\'&&test==42")
 
 }
 
@@ -32,7 +32,7 @@ func testConditionString(param string) {
 	max := int(100000)
 
 	for i := 0; i <= max; i++ {
-		arrRet := query.ParseConditions1(param)
+		arrRet, _ := query.ParseConditions(param)
 		if i == max {
 			query.DebugPrint(arrRet)
 		}

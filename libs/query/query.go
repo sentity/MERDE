@@ -175,11 +175,13 @@ func ParseConditions1(condition string) []Condition {
 			} else if currentChar == "&" && nextChar == "&" {
 				logicalResults = append(logicalResults, intermediateString.String())
 				intermediateString.Reset()
+				skipNext = true
 			} else {
 				intermediateString.WriteString(currentChar)
 			}
 		}
 	}
+	logicalResults = append(logicalResults, intermediateString.String())
 
 	// fmt.Println(intermediateString);
 	// fmt.Println("replacements");
@@ -221,19 +223,11 @@ func ParseConditions1(condition string) []Condition {
 		found = false
 	}
 
-	//fmt.Println("Final Result");
-	//for _,finalResult := range finalResults {
-	//	fmt.Println(finalResult.Alpha, " @@ ", finalResult.Operator, " @@ ", finalResult.Beta);
-	//}
-
-	//for _,finalResult := range finalResults {
-	//	fmt.Println(finalResult.Alpha, " @@ ", finalResult.Operator, " @@ ", finalResult.Beta);
-	//}
 	return finalResults
 }
 
-//func DebugPrint(param map[int]Condition) {
-func DebugPrint(param []Condition) {
+func DebugPrint(param map[int]Condition) {
+	//func DebugPrint(param []Condition) {
 	fmt.Println("- - - - - - - - - - \n")
 	out, _ := json.MarshalIndent(param, "", "  ")
 	fmt.Print(string(out))
