@@ -1,20 +1,91 @@
 package main
 
 import (
-	//"os"
-	//"errors"
-	"time"
-
 	"encoding/json"
 	"fmt"
 	"goer/libs/mapper"
+	"goer/libs/query"
+	"goer/libs/storage"
+	//"errors"
+	//"os"
+	"time"
 )
 
 var JsonMapThreadTest = make(map[string]bool)
 
 func main() {
 	//connector.Listen()
-	tests()
+	//tests()
+	testQueryParser()
+	mapGiantChain()
+}
+
+func testQueryParser() {
+	testConditionString("property.test=='42'")
+	testConditionString("property.test>'42'&&value%='12'&&test==42")
+
+}
+
+func testConditionString(param string) {
+	fmt.Println("- - - - - - - - - - - - - - - - -")
+	start := time.Now()
+	max := int(100000)
+
+	for i := 0; i <= max; i++ {
+		arrRet := query.ParseConditions1(param)
+		if i == max {
+			query.DebugPrint(arrRet)
+		}
+	}
+	elapsed := time.Since(start)
+	fmt.Println("Parseind condition: ", param, " | ", max, " - Times | in: ", elapsed)
+}
+
+func mapGiantChain() {
+	entityTypeId, _ := storage.CreateEntityIdent("test")
+	// we create the most upper parent entity
+	tmpEntity := storage.Entity{
+		ID:      -1,
+		Ident:   entityTypeId,
+		Value:   "test",
+		Context: "test",
+	}
+	start := time.Now()
+	// create new entity
+	rootId, _ := storage.CreateEntity(tmpEntity)
+	parentId := rootId
+	for i := 0; i < 2; i++ {
+		tmpEntity := storage.Entity{
+			ID:      -1,
+			Ident:   entityTypeId,
+			Value:   "test",
+			Context: "test",
+		}
+		// create new entity
+		childId, _ := storage.CreateEntity(tmpEntity)
+		tmpRelation := storage.Relation{
+			SourceIdent: entityTypeId,
+			SourceID:    parentId,
+			TargetIdent: entityTypeId,
+			TargetID:    childId,
+		}
+		storage.CreateRelation(entityTypeId, parentId, entityTypeId, childId, tmpRelation)
+		parentId = childId
+	}
+	fmt.Println("Created 100k datasets long chain - most root id: ", rootId)
+	ret, _ := mapper.GetEntityRecursive(entityTypeId, rootId)
+	elapsed := time.Since(start)
+	fmt.Println("Read out 100k datasets linked in a chain in ", elapsed, " seconds - testing return ")
+	testReturnTraverseDepth(ret, 0)
+}
+
+func testReturnTraverseDepth(data mapper.Entity, depth int) {
+	if childData, ok := data.Children[1]; ok {
+		depth = depth + 1
+		testReturnTraverseDepth(childData, depth)
+	} else {
+		fmt.Println("Traversed through return object, depth found ", depth)
+	}
 }
 
 func tests() {
@@ -103,7 +174,7 @@ func tests() {
 	JsonMapThreadTest["thread1"] = false
 	JsonMapThreadTest["thread2"] = false
 	go JsonMapThread1(max)
-	//go JsonMapThread2(max)
+	go JsonMapThread2(max)
 	for JsonMapThreadTest["thread1"] != true && JsonMapThreadTest["thread2"] != true {
 		time.Sleep(100000)
 	}
@@ -124,7 +195,7 @@ func JsonMapThread1(max int) {
 	i := 0
 	for i < max {
 		TestJsonMap()
-		fmt.Println("Thead 1 run: ", i)
+		//fmt.Println("Thead 1 run: ", i)
 		i++
 	}
 	fmt.Println("Thread 1 done. Wrote ", i, " 3level entities")
@@ -135,7 +206,7 @@ func JsonMapThread2(max int) {
 	i := 0
 	for i < max {
 		TestJsonMap()
-		fmt.Println("Thead 2 run: ", i)
+		//fmt.Println("Thead 2 run: ", i)
 		i++
 	}
 	fmt.Println("Thread 2 done. Wrote ", i, " 3level entities")
@@ -143,8 +214,8 @@ func JsonMapThread2(max int) {
 }
 
 func TestJsonMap() int {
-	JsonByteArray := []byte(`{"Context":"asd","Ident":"ip","Value":"it works yippiyey","Properties":{"onekey":"onevalue","twokey":"twovalue"},"Children":{}}`)
-	//JsonByteArray := []byte(`{"Context":"asd","Ident":"ip","Value":"it works yippiyey","Properties":{"onekey":"onevalue","twokey":"twovalue"},"Children":{"1":{"Context":"im the subobject","Ident":"Port","Value":"subobject kinda cooly","Properties":{"onekey":"udabedi","twokey":"dabedei"},"Children":{"2":{"Context":"im the third and best","Ident":"state","Value":"third depp so deep","Properties":{"onekey":"bass","twokey":"boom"},"Children":{}}}}}}`)
+	//JsonByteArray := []byte(`{"Context":"asd","Ident":"ip","Value":"it works yippiyey","Properties":{"onekey":"onevalue","twokey":"twovalue"},"Children":{}}`)
+	JsonByteArray := []byte(`{"Context":"asd","Ident":"ip","Value":"it works yippiyey","Properties":{"onekey":"onevalue","twokey":"twovalue"},"Children":{"1":{"Context":"im the subobject","Ident":"Port","Value":"subobject kinda cooly","Properties":{"onekey":"udabedi","twokey":"dabedei"},"Children":{"2":{"Context":"im the third and best","Ident":"state","Value":"third depp so deep","Properties":{"onekey":"bass","twokey":"boom"},"Children":{}}}}}}`)
 	var id, _ = mapper.MapJson(JsonByteArray)
 	return id
 }
