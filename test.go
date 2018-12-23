@@ -22,7 +22,7 @@ func main() {
 
 func testQueryParser() {
 	testConditionString("property.test=='42'")
-	testConditionString("property.test>'42'&&value%='12\\'\\'&&test==42")
+	testConditionString("property.test>'42'&&value%='12\\&\\&\\'\\'&&test==42")
 
 }
 

@@ -16,6 +16,33 @@ type Condition struct {
 	Operator string
 }
 
+type Set struct {
+	Collection []Query
+}
+
+type Query struct {
+	Type  string
+	Ident int
+	Mode  string
+	Set   map[string]string
+	Where []string
+	From  []int
+	To    []int
+}
+
+func parseQuery(query string) {
+
+	var jsonData []Query
+	if err := json.Unmarshal([]byte(query), jsonData); err != nil {
+		panic(err)
+	}
+	fmt.Print(jsonData)
+	//if len(jsonData) > 0 {
+	//
+	//}
+
+}
+
 func ParseConditions(condition string) (map[int]Condition, error) {
 	arrCondition, valueMap := ExtractParamStrings(condition)
 	//fmt.Print(parsedCondition)
@@ -108,7 +135,7 @@ func ExtractParamStrings(condition string) (map[int]string, map[int]string) {
 	return conditionMap, valueMap
 }
 
-func ParseConditions1(condition string) []Condition {
+func MazeParseConditions(condition string) []Condition {
 
 	// base consts
 	comparisonOperators := []string{"==", "!=", ">=", ">=", "%=", ">", "<"}
@@ -222,7 +249,6 @@ func ParseConditions1(condition string) []Condition {
 		}
 		found = false
 	}
-
 	return finalResults
 }
 
