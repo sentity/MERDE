@@ -1,0 +1,124 @@
+// read with multiple steps
+[
+    {
+        "type"  : "find.entity",
+        "ident" : "ip",
+        "where" : [
+            "property.type ='ipv6' && property.active='true'",
+            "value='2.3.4.5'"
+        ]
+    },
+    {
+        "type"      : "find.entity"
+        "direction" : "parent"
+        "ident"     : "domain",
+        "traverse" : 3
+    }
+]
+
+// update entry by where condition
+[
+    {
+        "type"  : "update.entity",
+        "ident" : "ip",
+        "where" : [
+            "value='2.3.4.5'"
+        ]
+        "set" : [
+            "property.checked='true'" 
+        ]
+    }
+]
+
+// delete entry by value
+[
+    {
+        "type"  : "delete.entity"
+        "ident" : "ip",
+        "where" : [
+            "this.value='2.3.4.5'"
+        ],
+        "mode" : "unsafe"
+    }
+]
+
+// create 1-N entities by json
+[
+    {
+        "type"  : "create.entity"
+        "data"  : "{//somejsondatatomapautoresolving and shit}",
+	"mapto" : [
+            13, // entity type id
+            14  // entity id
+        ]
+    }
+]
+
+// link 2 entities using a relation
+[
+    {
+        "type"  : "create.relation"
+        "from"  :  [
+            13, // entity type id
+            14  // entity id
+        ], 
+	"to" : [
+            16, // entity type id
+            3  // entity id
+        ],
+	"prop" : {},
+        "context" : ""
+    }
+]
+
+
+
+
+
+
+[
+    {
+        "t"  : find",
+        "i" : "ip",
+        "w" : [
+            "property.type ='ipv6'",
+            "value='2.3.4.5'"
+        ]
+    },
+    {
+        "t"      : "find"
+        "d" : "parent"
+        "i"     : "domain",
+        "r"   : true,
+        "tr" : 3
+    }
+]
+
+
+        "where" : [
+            [
+                {
+                    key  : 'property.type',
+                    op   : '=',
+                    data : 'IPV6'
+                },
+                {
+                    key  : 'property.active',
+                    op   : '=',
+                    data : 'true'
+                },
+             ]
+            [
+                {
+                    key  : 'value',
+                    op   : '=',
+                    data : '2.3.4.5'
+                }
+             ]
+        ]
+
+
+
+
+$objQuery = new godb();
+$objQuery->find("ip")->where(array("this.property.type","=","whatever")->
