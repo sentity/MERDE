@@ -2,6 +2,7 @@ package query
 
 import (
 	"bytes"
+	"carter/libs/mapper"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -16,31 +17,107 @@ type Condition struct {
 	Operator string
 }
 
-type Set struct {
-	Collection []Query
-}
-
 type Query struct {
-	Type  string
-	Ident int
-	Mode  string
-	Set   map[string]string
-	Where []string
-	From  []int
-	To    []int
+	Type     string
+	Ident    string
+	Mode     string
+	Set      map[string]string
+	Where    []string
+	From     []int
+	To       []int
+	Traverse int
 }
 
-func parseQuery(query string) {
+type ResultSet struct {
+	Data []ResultAddress
+}
 
+type ResultAddress struct {
+	Ident int
+	Id    int
+}
+
+func HandleQuery(query string) {
+	// unmarshal the json input
 	var jsonData []Query
-	if err := json.Unmarshal([]byte(query), jsonData); err != nil {
+	if err := json.Unmarshal([]byte(query), &jsonData); err != nil {
 		panic(err)
 	}
-	fmt.Print(jsonData)
-	//if len(jsonData) > 0 {
-	//
-	//}
+	queryCount := len(jsonData)
+	// if its  exactly 1 query
+	if queryCount == 1 {
+		ProcessQuery(jsonData[0], ResultSet{})
+	} else if queryCount > 1 {
+		// if its more than one query
+		ProcessMultiQuery(jsonData)
+	} else {
+		//		return
+	}
+}
 
+func ProcessMultiQuery(multiQuery []Query) {
+	// prepare an empty result set
+	results := ResultSet{}
+	// iterate through each of the multiquery to
+	// handle them, always providing the last results
+	for _, query := range multiQuery {
+		results, err := ProcessQuery(query, results)
+	}
+	lastIndex := len(multiQuery) - 1
+	// lets check if our final option is a find
+	if strings.Contains(multiQuery[lastIndex].Type, "find") {
+		ret := buildEntityReturn(results, multiQuery[lastIndex].Traverse)
+	} else {
+
+	}
+}
+
+func buildEntityReturn(results ResultSet, traverse int) []mapper.Entity {
+
+}
+
+func ProcessQuery(query Query, results ResultSet) (ResultSet, error) {
+	qtype := strings.Split(query.Type, ".")
+	if len(qtype) == 2 {
+		switch qtype[0] {
+		case "entity":
+			HandleEntityQuery(qtype[1], query, results)
+		case "relation":
+			HandleRelationQuery(qtype[1], query, results)
+		case "system":
+			HandleSystemQuery(qtype[1], query, results)
+		default:
+			// return error unknown query type resource
+		}
+	} else {
+		// return error invalid query type form
+	}
+}
+
+func HandleEntityQuery(action string, query Query, results ResultSet) {
+	switch action {
+	case "find":
+	case "update":
+	case "create":
+	case "delete":
+	default:
+		// return unknown action fail
+	}
+}
+
+func HandleRelationQuery(action string, query Query, results ResultSet) {
+	switch action {
+	case "find":
+	case "update":
+	case "create":
+	case "delete":
+	default:
+		// return unknown action fail
+	}
+}
+
+func HandleSystemQuery(action string, query Query, results ResultSet) {
+	// no idea yet , will add later
 }
 
 func ParseConditions(condition string) (map[int]Condition, error) {

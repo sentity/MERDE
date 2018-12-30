@@ -1,7 +1,7 @@
 // read with multiple steps
 [
     {
-        "type"  : "find.entity",
+        "type"  : "entity.find",
         "ident" : "ip",
         "where" : [
             "property.type ='ipv6' && property.active='true'",
@@ -9,7 +9,7 @@
         ]
     },
     {
-        "type"      : "find.entity"
+        "type"      : "entity.find"
         "direction" : "parent"
         "ident"     : "domain",
         "traverse" : 3
@@ -19,7 +19,7 @@
 // update entry by where condition
 [
     {
-        "type"  : "update.entity",
+        "type"  : "entity.update",
         "ident" : "ip",
         "where" : [
             "value='2.3.4.5'"
@@ -33,7 +33,7 @@
 // delete entry by value
 [
     {
-        "type"  : "delete.entity"
+        "type"  : "entity.delete"
         "ident" : "ip",
         "where" : [
             "this.value='2.3.4.5'"
@@ -45,7 +45,7 @@
 // create 1-N entities by json
 [
     {
-        "type"  : "create.entity"
+        "type"  : "entity.create"
         "data"  : "{//somejsondatatomapautoresolving and shit}",
 	"mapto" : [
             13, // entity type id
@@ -57,7 +57,7 @@
 // link 2 entities using a relation
 [
     {
-        "type"  : "create.relation"
+        "type"  : "relation.create"
         "from"  :  [
             13, // entity type id
             14  // entity id
@@ -121,4 +121,5 @@
 
 
 $objQuery = new godb();
-$objQuery->find("ip")->where(array("this.property.type","=","whatever")->
+$objQuery->find("ip")->where(array("this.property.type","=","whatever")->+
+$objQuery->find("person")->where(array("name","==","bernd"))

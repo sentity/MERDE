@@ -1,11 +1,11 @@
 package main
 
 import (
+	"carter/libs/mapper"
+	"carter/libs/query"
+	"carter/libs/storage"
 	"encoding/json"
 	"fmt"
-	"goer/libs/mapper"
-	"goer/libs/query"
-	"goer/libs/storage"
 	//"errors"
 	//"os"
 	"time"
@@ -16,11 +16,18 @@ var JsonMapThreadTest = make(map[string]bool)
 func main() {
 	//connector.Listen()
 	//tests()
+	//testQueryWhereParser()
+	//mapGiantChain()
 	testQueryParser()
-	mapGiantChain()
 }
 
 func testQueryParser() {
+	//multiquery := "[{\"type\":\"find.entity\",\"ident\":\"ip\",\"where\":[\"property.type ='ipv6' && property.active='true'\",\"value='2.3.4.5'\"]},{\"type\":\"find.entity\",\"direction\":\"parent\",\"ident\":\"domain\",\"traverse\":3}]"
+	//query.HandleQuery(multiquery)
+
+}
+
+func testQueryWhereParser() {
 	testConditionString("property.test=='42'")
 	testConditionString("property.test>'42'&&value%='12\\&\\&\\'\\'&&test==42")
 
@@ -169,7 +176,7 @@ func tests() {
 	//fmt.Println("3 level entity read mass in : ",elapsed6)
 	// ----------------------
 	start7 := time.Now()
-	max := 1000000
+	max := 100000
 	// testing mass insert
 	JsonMapThreadTest["thread1"] = false
 	JsonMapThreadTest["thread2"] = false
