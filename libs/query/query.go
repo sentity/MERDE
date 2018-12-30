@@ -21,6 +21,7 @@ type Query struct {
 	Type     string
 	Ident    string
 	Mode     string
+	Direction string
 	Set      map[string]string
 	Where    []string
 	From     []int
@@ -46,30 +47,35 @@ func HandleQuery(query string) {
 	queryCount := len(jsonData)
 	// if its  exactly 1 query
 	if queryCount == 1 {
-		ProcessQuery(jsonData[0], ResultSet{})
+		results, err := ProcessQuery(jsonData[0], ResultSet{})
 	} else if queryCount > 1 {
 		// if its more than one query
-		ProcessMultiQuery(jsonData)
+		results, err := ProcessMultiQuery(jsonData)
 	} else {
-		//		return
+		//		return error no query given
 	}
+    // get the highest index to dispatch the right action
+    // for result building
+	lastIndex := queryCount - 1
+	if jsonData[lastIndex].Type
+
 }
 
-func ProcessMultiQuery(multiQuery []Query) {
+func ProcessMultiQuery(multiQuery []Query) (ResultSet, error){
 	// prepare an empty result set
 	results := ResultSet{}
+	ret     := ResultSet{}
 	// iterate through each of the multiquery to
 	// handle them, always providing the last results
 	for _, query := range multiQuery {
 		results, err := ProcessQuery(query, results)
+		if err != nil {
+			return ResultSet{}, err
+		}
+		ret = results
 	}
-	lastIndex := len(multiQuery) - 1
 	// lets check if our final option is a find
-	if strings.Contains(multiQuery[lastIndex].Type, "find") {
-		ret := buildEntityReturn(results, multiQuery[lastIndex].Traverse)
-	} else {
-
-	}
+	return results, nil
 }
 
 func buildEntityReturn(results ResultSet, traverse int) []mapper.Entity {
