@@ -1,11 +1,12 @@
 package main
 
 import (
-	"carter/libs/mapper"
-	"carter/libs/query"
-	"carter/libs/storage"
 	"encoding/json"
 	"fmt"
+	"goer/libs/connector"
+	"goer/libs/mapper"
+	//	"goer/libs/query"
+	"goer/libs/storage"
 	//"errors"
 	//"os"
 	"time"
@@ -14,11 +15,11 @@ import (
 var JsonMapThreadTest = make(map[string]bool)
 
 func main() {
-	//connector.Listen()
+	connector.Listen()
 	//tests()
 	//testQueryWhereParser()
 	//mapGiantChain()
-	testQueryParser()
+	//testQueryParser()
 }
 
 func testQueryParser() {
@@ -34,21 +35,22 @@ func testQueryWhereParser() {
 }
 
 func testConditionString(param string) {
-	fmt.Println("- - - - - - - - - - - - - - - - -")
-	start := time.Now()
-	max := int(100000)
+	//fmt.Println("- - - - - - - - - - - - - - - - -")
+	//	start := time.Now()
+	//	max := int(100000)
 
-	for i := 0; i <= max; i++ {
-		arrRet, _ := query.ParseConditions(param)
-		if i == max {
-			query.DebugPrint(arrRet)
-		}
-	}
-	elapsed := time.Since(start)
-	fmt.Println("Parseind condition: ", param, " | ", max, " - Times | in: ", elapsed)
+	//for i := 0; i <= max; i++ {
+	//	arrRet, _ := query.ParseConditions(param)
+	//	if i == max {
+	//	query.DebugPrint(arrRet)
+	//	}
+	//}
+	//elapsed := time.Since(start)
+	//fmt.Println("Parseind condition: ", param, " | ", max, " - Times | in: ", elapsed)
 }
 
 func mapGiantChain() {
+	max := 6000000
 	entityTypeId, _ := storage.CreateEntityIdent("test")
 	// we create the most upper parent entity
 	tmpEntity := storage.Entity{
@@ -61,7 +63,7 @@ func mapGiantChain() {
 	// create new entity
 	rootId, _ := storage.CreateEntity(tmpEntity)
 	parentId := rootId
-	for i := 0; i < 2; i++ {
+	for i := 0; i < max; i++ {
 		tmpEntity := storage.Entity{
 			ID:      -1,
 			Ident:   entityTypeId,
@@ -79,11 +81,12 @@ func mapGiantChain() {
 		storage.CreateRelation(entityTypeId, parentId, entityTypeId, childId, tmpRelation)
 		parentId = childId
 	}
-	fmt.Println("Created 100k datasets long chain - most root id: ", rootId)
-	ret, _ := mapper.GetEntityRecursive(entityTypeId, rootId)
 	elapsed := time.Since(start)
-	fmt.Println("Read out 100k datasets linked in a chain in ", elapsed, " seconds - testing return ")
-	testReturnTraverseDepth(ret, 0)
+	fmt.Println("Created ", max, " datasets long chain - most root id: ", rootId, " | time taken ", elapsed)
+	//ret, _ := mapper.GetEntityRecursive(entityTypeId, rootId)
+
+	//fmt.Println("Read out 500k datasets linked in a chain in ", elapsed, " seconds - testing return ")
+	//testReturnTraverseDepth(ret, 0)
 }
 
 func testReturnTraverseDepth(data mapper.Entity, depth int) {

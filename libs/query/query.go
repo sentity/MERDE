@@ -2,10 +2,10 @@ package query
 
 import (
 	"bytes"
-	"carter/libs/mapper"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"goer/libs/mapper"
 	"os"
 	"strconv"
 	"strings"
@@ -18,15 +18,17 @@ type Condition struct {
 }
 
 type Query struct {
-	Type     string
-	Ident    string
-	Mode     string
+	Type      string
+	Ident     string
+	Mode      string
+	Imply     int
 	Direction string
-	Set      map[string]string
-	Where    []string
-	From     []int
-	To       []int
-	Traverse int
+	Set       map[string]string
+	Where     []string
+	From      []int
+	To        []int
+	Traverse  int
+	Rejoin    int
 }
 
 type ResultSet struct {
@@ -38,6 +40,12 @@ type ResultAddress struct {
 	Id    int
 }
 
+type Filter struct {
+	Id   int
+	Sets []ResultSet
+	Mode string
+}
+
 func HandleQuery(query string) {
 	// unmarshal the json input
 	var jsonData []Query
@@ -45,29 +53,34 @@ func HandleQuery(query string) {
 		panic(err)
 	}
 	queryCount := len(jsonData)
-	// if its  exactly 1 query
-	if queryCount == 1 {
-		results, err := ProcessQuery(jsonData[0], ResultSet{})
-	} else if queryCount > 1 {
-		// if its more than one query
-		results, err := ProcessMultiQuery(jsonData)
-	} else {
-		//		return error no query given
+	// if there really are queries
+	if queryCount > 0 {
+		results, err := ProcessQuery(jsonData)
 	}
-    // get the highest index to dispatch the right action
-    // for result building
-	lastIndex := queryCount - 1
-	if jsonData[lastIndex].Type
 
 }
 
-func ProcessMultiQuery(multiQuery []Query) (ResultSet, error){
+func ProcessQuery(multiQuery []Query) (ResultSet, error) {
 	// prepare an empty result set
-	results := ResultSet{}
-	ret     := ResultSet{}
+	ResultStorage := make(map[int]ResultSet)
+	FilterStorage := make(map[int]Filter)
 	// iterate through each of the multiquery to
 	// handle them, always providing the last results
-	for _, query := range multiQuery {
+	for queryId, query := range multiQuery {
+		// first we get the info what type of query
+		// we are running | maybe validate later ###
+		qtype := strings.Split(query.Type, ".")
+		// if we are doin a system query we hard dispatch here
+		if qtype[0] == "system" {
+			SysMessage := SystemCall(query)
+			return ResultSet{}, errors.New(SysMessage)
+		}
+		// now , if we got an entity
+		if qtype[0] == "entity" {
+			HandleEntityQuery()
+
+		}
+
 		results, err := ProcessQuery(query, results)
 		if err != nil {
 			return ResultSet{}, err
@@ -76,28 +89,6 @@ func ProcessMultiQuery(multiQuery []Query) (ResultSet, error){
 	}
 	// lets check if our final option is a find
 	return results, nil
-}
-
-func buildEntityReturn(results ResultSet, traverse int) []mapper.Entity {
-
-}
-
-func ProcessQuery(query Query, results ResultSet) (ResultSet, error) {
-	qtype := strings.Split(query.Type, ".")
-	if len(qtype) == 2 {
-		switch qtype[0] {
-		case "entity":
-			HandleEntityQuery(qtype[1], query, results)
-		case "relation":
-			HandleRelationQuery(qtype[1], query, results)
-		case "system":
-			HandleSystemQuery(qtype[1], query, results)
-		default:
-			// return error unknown query type resource
-		}
-	} else {
-		// return error invalid query type form
-	}
 }
 
 func HandleEntityQuery(action string, query Query, results ResultSet) {
@@ -109,6 +100,32 @@ func HandleEntityQuery(action string, query Query, results ResultSet) {
 	default:
 		// return unknown action fail
 	}
+}
+
+func SystemCall(query Query) (Result string) {
+	return ""
+}
+
+func ProcessQuery(query Query, results ResultSet) (ResultSet, error) {
+
+	if len(qtype) == 2 {
+		switch qtype[0] {
+		case "entity":
+			HandleEntityQuery(qtype[1], query, results)
+		//case "relation":
+		//	HandleRelationQuery(qtype[1], query, results)
+		case "system":
+			HandleSystemQuery(qtype[1], query, results)
+		default:
+			// return error unknown query type resource
+		}
+	} else {
+		// return error invalid query type form
+	}
+}
+
+func buildEntityReturn(results ResultSet, traverse int) []mapper.Entity {
+
 }
 
 func HandleRelationQuery(action string, query Query, results ResultSet) {

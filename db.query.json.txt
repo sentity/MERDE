@@ -1,3 +1,15 @@
+$obj->find("ip")
+    ->where("property.type","=","ipv6")
+    ->where("property.active","=","true")
+    ->orWhere("value","=","2.3.4.5")
+    ->filter(function($obj){
+        $obj->find("port","child")
+            ->where("value","=","80")
+            ->find("state","child")
+            ->where("value","=","open");
+    })->find("domain","parent")
+    ->traverse(3);
+
 // read with multiple steps
 [
     {
@@ -9,10 +21,29 @@
         ]
     },
     {
-        "type"      : "entity.find"
-        "direction" : "parent"
+        "type"      : "entity.find",
+        "direction" : "child",
+        "ident"     : "port",
+        "imply"     : 0,
+        "where" : [
+            "value='80'"
+        ]
+    },
+    {
+        "type"      : "entity.find",
+        "direction" : "child",
+        "ident"     : "state",
+        "imply"     : 1,
+        "where" : [
+            "value='open'"
+        ]
+    },
+    {
+        "type"      : "entity.find",
+        "direction" : "parent",
         "ident"     : "domain",
-        "traverse" : 3
+        "imply"     : 0,
+        "traverse"  : 3
     }
 ]
 
@@ -123,3 +154,89 @@
 $objQuery = new godb();
 $objQuery->find("ip")->where(array("this.property.type","=","whatever")->+
 $objQuery->find("person")->where(array("name","==","bernd"))
+
+
+
+
+
+
+
+
+$query->find("ip", function($query) {
+    $query->where("a","=","b")
+          ->orWhere("c","=","d")
+    })->filter(function($query) {
+            $query->find("port")
+                  ->where("value","=","80")
+                  ->where("state","=","open")
+                  ->orWhere("value","=","443")
+                  ->where("state","=","open");
+        },function($query) {
+            $query->rfind("domain")
+              ->where("tld","=","de");
+        },
+        htpdb::CONCAT_OR
+    )->rfind("subnet")
+    ->traverse(2);
+
+
+
+[
+    {
+        "type"  : "entity.find",
+        "ident" : "ip",
+        "where" : [
+            "property.a ='b'",
+            "property.c='d'"
+        ]
+    },
+    {
+        "type"      : "filter",
+        "id"        : 0,
+        "imply"     : 0,
+        "mode"      : "or"
+    },
+    {
+        "type"      : "entity.find",
+        "direction" : "child",
+        "ident"     : "port",
+        "imply"     : 0,
+        "return"    : 1,
+        "where" : [
+            "value='80' && property.state='open'",
+            "value='443' && property.state='open'"
+        ]
+    },
+    {
+        "type"      : "entity.find",
+        "direction" : "parent",
+        "ident"     : "domain",
+        "imply"     : 0,
+        "return"    : 1,
+        "where" : [
+            "property.tld='io' "
+        ]
+    },
+    {
+        "type"      : "entity.find",
+        "direction" : "subnet",
+        "ident"     : "domain",
+        "imply"     : 1,
+        "traverse"  : 2
+    },
+]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
