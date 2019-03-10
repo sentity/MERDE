@@ -2,6 +2,7 @@ package connector
 
 import (
 	"bytes"
+	//"encoding/json"
 	"errors"
 	"fmt"
 	"net"
@@ -22,6 +23,10 @@ type Intercom struct {
 	Out chan string
 }
 
+type Query struct {
+	Type string
+}
+
 type Connection struct {
 	ID       int
 	Address  string
@@ -29,9 +34,12 @@ type Connection struct {
 	Intercom Intercom
 }
 
+type Response struct {
+}
+
 var PackageSize = 50005 // length 3 checksum + content
 var Connections = make(map[int]Connection)
-var Timeout = 30
+var Timeout = 300
 var MaxID = 0
 
 // --------------------------------------------------------------------------------------------------------------------
@@ -111,7 +119,7 @@ func handleConnection(conn net.Conn, inter Intercom) {
 			// if buffer in is longer than the controle number length we gonne check the buffer
 			// if it may contain a complete package to handle
 			if len(bufferIn) > 5 {
-				strPackage, bufferIn, err = checkBuffer(bufferIn)
+				bufferIn, strPackage, err = checkBuffer(bufferIn)
 				if nil != err {
 					// #### handle buffer error
 				}
@@ -140,18 +148,20 @@ func handleConnection(conn net.Conn, inter Intercom) {
 		// than the given timeout
 		if lastChanged+Timeout < currTime {
 			fmt.Println("Closing connection")
+			return
 		}
 		time.Sleep(5000) // 0,000005 seconds to not burn the CPU
 	}
 }
 
-func sendResponse(conn net.Conn, message string) {
-	strPackage := buildPackage(message)
-	conn.Write([]byte(strPackage))
+func sendResponse(conn net.Conn, message Response) {
+	//strPackage := buildPackage(message)
+	//conn.Write([]byte(strPackage))
 	// #### maybe return something here xDD
 }
 
-func buildPackage(message string) string {
+func buildPackage(message Response) string {
+	//message = json.Marshal(message)
 	// ## add check for TO BIG responses
 	var strPackage strings.Builder
 	messageLength := len(message)
@@ -181,6 +191,7 @@ func checkBuffer(buffer string) (string, string, error) {
 	if bufferLength == 5+intLength {
 		// lets retrieve the package contents
 		strPackage = buffer[5:]
+
 		// if there is more
 		buffer = ""
 	}
